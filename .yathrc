@@ -1,0 +1,4 @@
+[test]
+-j4
+--max-open-jobs=1000
+

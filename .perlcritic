@@ -1,0 +1,47 @@
+severity = 1
+[-Bangs::ProhibitNumberedNames]
+[-BuiltinFunctions::ProhibitUniversalIsa]
+[-CodeLayout::ProhibitParensWithBuiltins]
+[-CodeLayout::RequireTidyCode]
+[-Community::DiscouragedModules]
+[-Community::PreferredAlternatives]
+[-ControlStructures::ProhibitCascadingIfElse]
+[ControlStructures::ProhibitPostfixControls]
+allow = for if unless
+[-ControlStructures::ProhibitUnlessBlocks]
+[-Documentation::PodSpelling]
+[-Documentation::RequirePodSections]
+[InputOutput::RequireCheckedSyscalls]
+functions = :builtins
+exclude_functions = print say
+[Modules::ProhibitExcessMainComplexity]
+max_mccabe = 50
+[-Modules::ProhibitMultiplePackages]
+[-Modules::RequireEndWithOne]
+[-Modules::RequireExplicitInclusion]
+[-Modules::RequireExplicitPackage]
+[NamingConventions::ProhibitAmbiguousNames]
+forbid = abstract bases close contract last left no record right second
+[-RegularExpressions::ProhibitComplexRegexes]
+[-RegularExpressions::RequireDotMatchAnything]
+[-RegularExpressions::RequireLineBoundaryMatching]
+[-Subroutines::ProhibitBuiltinHomonyms]
+[Subroutines::ProhibitExcessComplexity]
+max_mccabe = 50
+[-Subroutines::ProhibitSubroutinePrototypes]
+[-Subroutines::ProhibitExplicitReturnUndef]
+[-Subroutines::ProhibitCallsToUndeclaredSubs]
+[-Subroutines::ProhibitCallsToUnexportedSubs]
+[-Subroutines::ProhibitManyArgs]
+[-Subroutines::RequireFinalReturn]
+[-TestingAndDebugging::ProhibitNoWarnings]
+[-TooMuchCode::ProhibitDuplicateLiteral]
+[ValuesAndExpressions::ProhibitMagicNumbers]
+allowed_values = -10000..100000
+[-ValuesAndExpressions::ProhibitVersionStrings]
+[-ValuesAndExpressions::ProhibitLongChainsOfMethodCalls]
+[-ValuesAndExpressions::RequireInterpolationOfMetachars]
+[Variables::ProhibitPackageVars]
+add_packages = DBI
+[Variables::ProhibitPunctuationVars]
+allow = $@ $! ${^CAPTURE}
