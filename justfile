@@ -1,21 +1,17 @@
 set shell := ["bash", "-c"]
 
-PWD           := justfile_directory()
-
+PWD := justfile_directory()
 PERL5LIB_BASE := PWD / "local" / "lib" / "perl5"
-PERL5LIB_LIB  := PERL5LIB_BASE + ":" + PWD / "lib"
-
-PERLCRITIC    := "perlcritic" + " --profile " + PWD / ".perlcritic"
-PERLIMPORTS   := "perlimports -i --config-file=" + PWD / ".perlimports.toml"
-PERLTIDY      := 'perltidier'
-PLACK_ENV     := 'test'
-YATH          := 'yath'
-
-DB_FILE       := PWD / "db" / "dev.db"
-SCHEMA        := PWD / "sql" / "schema.sql"
-
-LOCAL_BIN     := PWD / "local" / "bin"
-export PATH   := LOCAL_BIN + ":" + env("PATH")
+PERL5LIB_LIB := PERL5LIB_BASE + ":" + PWD / "lib"
+PERLCRITIC := "perlcritic" + " --profile " + PWD / ".perlcritic"
+PERLIMPORTS := "perlimports -i --config-file=" + PWD / ".perlimports.toml"
+PERLTIDY := 'perltidier'
+PLACK_ENV := 'test'
+YATH := 'yath'
+DB_FILE := PWD / "db" / "dev.db"
+SCHEMA := PWD / "sql" / "schema.sql"
+LOCAL_BIN := PWD / "local" / "bin"
+export PATH := LOCAL_BIN + ":" + env("PATH")
 
 default:
     @just --list
@@ -53,12 +49,18 @@ critic:
     @export PERL5LIB={{ PERL5LIB_LIB }};\
       find t -name \*.t -print0 | xargs -0 {{ PERLCRITIC }} --theme=tests
 
-daemon:
+development-psgi:
     @export \
       DB_FILE={{ DB_FILE }} \
       PERL5LIB={{ PERL5LIB_LIB }} \
       SCHEMA={{ SCHEMA }};\
-      mkdir -p log && mkdir -p db && plackup -E development app.psgi
+      mkdir -p log && mkdir -p db && plackup -E development development.psgi
+
+test-psgi:
+    @export \
+      PERL5LIB={{ PERL5LIB_LIB }} \
+      SCHEMA={{ SCHEMA }};\
+      mkdir -p log && mkdir -p db && plackup -E test test.psgi
 
 imports:
     @export PERL5LIB={{ PERL5LIB_LIB }};\
