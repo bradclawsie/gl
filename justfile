@@ -11,6 +11,7 @@ PERLTIDY      := 'perltidier'
 PLACK_ENV     := 'test'
 YATH          := 'yath'
 
+DB_FILE       := PWD / "db" / "dev.db"
 SCHEMA        := PWD / "sql" / "schema.sql"
 
 LOCAL_BIN     := PWD / "local" / "bin"
@@ -54,6 +55,7 @@ critic:
 
 daemon:
     @export \
+      DB_FILE={{ DB_FILE }} \
       PERL5LIB={{ PERL5LIB_LIB }} \
       SCHEMA={{ SCHEMA }};\
       mkdir -p log && mkdir -p db && plackup -E development app.psgi
@@ -74,6 +76,7 @@ run *CMD:
 
 test:
     @export \
+      DB_FILE={{ DB_FILE }} \
       PERL5LIB={{ PERL5LIB_LIB }} \
       PLACK_ENV={{ PLACK_ENV }} \
       SCHEMA={{ SCHEMA }};\
@@ -91,6 +94,7 @@ tidy:
 # Run a single test; e.g. "just yath t/00-test.t".
 yath TEST:
     @export \
+      DB_FILE={{ DB_FILE }} \
       PERL5LIB={{ PERL5LIB_LIB }} \
       PLACK_ENV={{ PLACK_ENV }} \
       SCHEMA={{ SCHEMA }};\
