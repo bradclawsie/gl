@@ -590,6 +590,24 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.48
       Test::Simple 0.90
       perl 5.008001
+  DBIx-Connector-0.60
+    pathname: A/AR/ARISTOTLE/DBIx-Connector-0.60.tar.gz
+    provides:
+      DBIx::Connector 0.60
+      DBIx::Connector::Driver 0.60
+      DBIx::Connector::Driver::Firebird 0.60
+      DBIx::Connector::Driver::MSSQL 0.60
+      DBIx::Connector::Driver::MariaDB 0.60
+      DBIx::Connector::Driver::Oracle 0.60
+      DBIx::Connector::Driver::Pg 0.60
+      DBIx::Connector::Driver::SQLite 0.60
+      DBIx::Connector::Driver::mysql 0.60
+      DBIx::Connector::RollbackError 0.60
+      DBIx::Connector::SvpRollbackError 0.60
+      DBIx::Connector::TxnRollbackError 0.60
+    requirements:
+      DBI 1.605
+      perl 5.008001
   Data-OptList-0.114
     pathname: R/RJ/RJBS/Data-OptList-0.114.tar.gz
     provides:

@@ -15,7 +15,7 @@ my $rt = GL::Runtime::Test->new;
 subtest 'test db' => sub {
   ok(
     lives {
-      my $c = $rt->dbh->selectrow_array('select count(*) from user');
+      my $c = $rt->db->dbh->selectrow_array('select count(*) from user');
       is(0, $c);
     },
   ) or note($EVAL_ERROR);
@@ -26,7 +26,7 @@ subtest 'test db' => sub {
 subtest 'development db' => sub {
   ok(
     lives {
-      GL::Runtime::Development->new->dbh->selectrow_array(
+      GL::Runtime::Development->new->db->dbh->selectrow_array(
         'select count(*) from user',);
     },
   ) or note($EVAL_ERROR);

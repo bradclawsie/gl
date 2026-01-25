@@ -35,7 +35,7 @@ sub BUILD ($self, $args) {
   # build :memory: db
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
-  $self->dbh->do($schema);
+  $self->db->dbh->do($schema);
 }
 
 with 'GL::Runtime';

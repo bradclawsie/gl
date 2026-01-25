@@ -6,7 +6,7 @@ requires 'CryptX';
 requires 'Crypt::Argon2';
 requires 'Crypt::JWT';
 requires 'DBD::SQLite';
-requires 'DBI';
+requires 'DBIx::Connector';
 requires 'English';
 requires 'indirect';
 requires 'List::Util';
