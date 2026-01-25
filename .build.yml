@@ -6,5 +6,5 @@ tasks:
       pushd kg
       just carton deps
   - test: |
-      pushd kg
+      pushd gl
       just test critic
