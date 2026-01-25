@@ -3,7 +3,7 @@ use v5.42;
 use strictures 2;
 use Carp            qw( croak );
 use Crypt::Misc     qw( random_v4uuid );
-use DBI             ();
+use DBIx::Connector ();
 use File::Spec      ();
 use Types::Standard qw( ArrayRef CodeRef InstanceOf Str );
 use Types::UUID     qw( Uuid );
@@ -27,17 +27,18 @@ has api_version => (
   default  => sub { 'v0' },
 );
 
-has dbh => (
+has db => (
   is       => 'ro',
-  isa      => InstanceOf ['DBI::db'],
+  isa      => InstanceOf ['DBIx::Connector'],
   required => true,
   lazy     => true,
   default  => sub ($self) {
-    my $dbh = DBI->connect(@{$self->dbi}) || croak $DBI::errstr;
+    my $conn = DBIx::Connector->new(@{$self->dbi});
+    my $dbh  = $conn->dbh;
     for my $pragma (@{$self->dbh_pragmas}) {
       $dbh->do($pragma) || croak $!;
     }
-    return $dbh;
+    return $conn;
   },
 );
 

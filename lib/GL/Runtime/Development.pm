@@ -37,7 +37,7 @@ sub BUILD ($self, $args) {
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
   if (-f $db_file) {
-    my @tables = $self->dbh->tables;
+    my @tables = $self->db->dbh->tables;
     croak 'development db tables' if scalar @tables == 0;
   }
   else {
@@ -45,7 +45,7 @@ sub BUILD ($self, $args) {
     unless (-d $db_dir) {
       mkdir $db_dir || croak $!;
     }
-    $self->dbh->do($schema);
+    $self->db->dbh->do($schema);
   }
 }
 
