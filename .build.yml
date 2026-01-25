@@ -1,0 +1,10 @@
+image: archlinux
+tasks:
+  - arch: |
+      sudo pacman -S --noconfirm curl just sqlite
+  - setup: |
+      pushd kg
+      just carton deps
+  - test: |
+      pushd kg
+      just test critic
