@@ -1,7 +1,8 @@
 use v5.42;
 use strictures 2;
 use Crypt::Misc             qw( random_v4uuid );
-use Test2::V0               qw( done_testing is ok subtest );
+use English                 qw(-no_match_vars);
+use Test2::V0               qw( done_testing is note ok subtest );
 use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
 
@@ -17,7 +18,8 @@ subtest 'test db' => sub {
       my $c = $rt->dbh->selectrow_array('select count(*) from user');
       is(0, $c);
     },
-  );
+  ) or note($EVAL_ERROR);
+
   done_testing;
 };
 
@@ -27,7 +29,8 @@ subtest 'development db' => sub {
       GL::Runtime::Development->new->dbh->selectrow_array(
         'select count(*) from user',);
     },
-  );
+  ) or note($EVAL_ERROR);
+
   done_testing;
 };
 
@@ -36,7 +39,7 @@ subtest 'get_key' => sub {
     lives {
       Key->check($rt->get_key->($rt->encryption_key_version));
     },
-  );
+  ) or note($EVAL_ERROR);
 
   ok(
     lives {
@@ -50,7 +53,9 @@ subtest 'get_key' => sub {
       }
       ok($caught);
     },
-  );
+  ) or note($EVAL_ERROR);
+
+  done_testing;
 };
 
 done_testing;
