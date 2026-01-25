@@ -9,6 +9,7 @@ requires 'DBD::SQLite';
 requires 'DBIx::Connector';
 requires 'English';
 requires 'indirect';
+requires 'JSON::MaybeXS';
 requires 'List::Util';
 requires 'multidimensional';
 requires 'Math::Random::ISAAC';
