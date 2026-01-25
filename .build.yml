@@ -3,7 +3,7 @@ tasks:
   - arch: |
       sudo pacman -S --noconfirm curl just sqlite
   - setup: |
-      pushd kg
+      pushd gl
       just carton deps
   - test: |
       pushd gl
