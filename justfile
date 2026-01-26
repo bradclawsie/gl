@@ -12,6 +12,7 @@ DB_FILE := PWD / "db" / "dev.db"
 SCHEMA := PWD / "sql" / "schema.sql"
 LOCAL_BIN := PWD / "local" / "bin"
 export PATH := LOCAL_BIN + ":" + env("PATH")
+export PERL5LIB := PERL5LIB_LIB
 
 default:
     @just --list
@@ -27,77 +28,60 @@ carton:
 
 # Install carton dependencies; follows "carton" rule.
 deps:
-    @export PERL5LIB={{ PERL5LIB_BASE }};\
-      carton install
+    @carton install
 
 # Update all carton dependencies.
 update:
-    @export PERL5LIB={{ PERL5LIB_BASE }};\
-      carton update
+    @carton update
 
 # App rules.
 
 check:
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      for i in `find lib -name \*.pm`; do perl -c $i; done
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      for i in `find t -name \*.t`; do perl -c $i; done
+    @for i in `find lib -name \*.pm`; do perl -c $i; done
+    @for i in `find psgi -name \*.psgi`; do perl -c $i; done
+    @for i in `find t -name \*.t`; do perl -c $i; done
 
 critic:
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      find lib -name \*.pm -print0 | xargs -0 {{ PERLCRITIC }}
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      find t -name \*.t -print0 | xargs -0 {{ PERLCRITIC }} --theme=tests
+    @find lib -name \*.pm -print0 | xargs -0 {{ PERLCRITIC }}
+    @find psgi -name \*.psgi -print0 | xargs -0 {{ PERLCRITIC }}
+    @find t -name \*.t -print0 | xargs -0 {{ PERLCRITIC }} --theme=tests
 
 development-psgi:
-    @export \
+    export \
       DB_FILE={{ DB_FILE }} \
-      PERL5LIB={{ PERL5LIB_LIB }} \
       SCHEMA={{ SCHEMA }};\
-      mkdir -p log && mkdir -p db && plackup -E development development.psgi
+      mkdir -p log && mkdir -p db && pushd psgi && plackup -E development app.psgi
 
 test-psgi:
-    @export \
-      PERL5LIB={{ PERL5LIB_LIB }} \
+    export \
       SCHEMA={{ SCHEMA }};\
-      mkdir -p log && mkdir -p db && plackup -E test test.psgi
+      mkdir -p log && pushd psgi && plackup -E test app.psgi
 
 imports:
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      find lib -name \*.pm -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      find t -name \*.t -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
-
-repl:
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      perl -de 0
-
-run *CMD:
-    @export PERL5LIB={{ PERL5LIB_LIB }};\
-      {{ CMD }}
-
-test:
-    @export \
-      DB_FILE={{ DB_FILE }} \
-      PERL5LIB={{ PERL5LIB_LIB }} \
-      PLACK_ENV={{ PLACK_ENV }} \
-      SCHEMA={{ SCHEMA }};\
-      find t -name \*.t -print0 | xargs -0 {{ YATH }}
+    @find lib -name \*.pm -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
+    @find psgi -name \*.psgi -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
+    @find t -name \*.t -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
 
 tidy:
-    @export PERL5LIB={{ PERL5LIB_BASE }};\
-      find . -name \*.pm -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
-    @export PERL5LIB={{ PERL5LIB_BASE }};\
-      find . -name \*.t -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
+    @find . -name \*.pm -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
+    @find . -name \*.psgi -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
+    @find . -name \*.t -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
     @find -name \*bak -delete
     @find -name \*tdy -delete
     @find -name \*.ERR -delete
 
-# Run a single test; e.g. "just yath t/00-test.t".
-yath TEST:
+# Commands using "run".
+
+run *CMD:
     @export \
       DB_FILE={{ DB_FILE }} \
-      PERL5LIB={{ PERL5LIB_LIB }} \
       PLACK_ENV={{ PLACK_ENV }} \
       SCHEMA={{ SCHEMA }};\
-      {{ YATH }} {{ TEST }}
+      {{ CMD }}
+
+repl: (run 'perl -de 0')
+
+test: (run 'find t -name \*.t -print0 | xargs -0 ' + YATH)
+
+# Run a single test; e.g. "just yath t/00-test.t".
+yath TEST: (run YATH + " " + TEST)
