@@ -12,6 +12,7 @@ requires 'indirect';
 requires 'JSON::MaybeXS';
 requires 'List::Util';
 requires 'multidimensional';
+requires 'Marlin';
 requires 'Math::Random::ISAAC';
 requires 'Moo';
 requires 'Path::Tiny';
