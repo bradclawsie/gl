@@ -24,7 +24,8 @@ use Marlin::Role
   lazy    => true,
   default => sub ($self) {
     my $conn = DBIx::Connector->new(@{$self->dbi});
-    my $dbh  = $conn->dbh;
+    $conn->mode('ping');
+    my $dbh = $conn->dbh;
     for my $pragma (@{$self->dbh_pragmas}) {
       $dbh->do($pragma) || croak $!;
     }
