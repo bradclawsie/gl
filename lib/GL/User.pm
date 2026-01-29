@@ -1,133 +1,78 @@
 package GL::User;
 use v5.42;
 use strictures 2;
-use Carp                  qw( croak );
 use Crypt::Digest::SHA256 qw( sha256_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use Crypt::PK::Ed25519    ();
 use Time::Piece           ();
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard       qw( Maybe );
 use Types::UUID           qw( Uuid );
-use GL::Crypt::Password   qw( rand_password );
-use GL::Attribute         qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 
-use Moo;
+use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
+use GL::Crypt::Password qw( rand_password );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-our $SCHEMA_VERSION = 0;
+use Marlin
+  -modifiers,
+  -with => ['GL::Model'],
 
-has display_name => (
-  is       => 'rw',
-  isa      => NonEmptyStr,
-  required => true,
-  trigger  => sub ($self, $v) {
-    $self->_set_display_name_digest(sha256_hex($v));
+  'display_name==!' => {
+  isa     => NonEmptyStr,
+  trigger => sub ($self, @args) {
+    return unless scalar(@args) && defined($args[0]);
+    $self->{display_name_digest} = sha256_hex($args[0]);
   },
-);
+  },
 
-has display_name_digest => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => false,
-  writer   => '_set_display_name_digest',
-);
+  'display_name_digest' => NonEmptyStr,
 
-# Will be set only if caller has not provided ed25519_public.
-# Return this to caller scope and then destroy object promptly.
-has ed25519_private => (
-  is       => 'ro',
-  isa      => Maybe [NonEmptyStr],
-  required => false,
-  trigger  => sub ($self, $v) {
-    try {
-      my $k = Crypt::PK::Ed25519->new(\$v);
-      croak 'not private key' unless $k->is_private;
-    }
-    catch ($e) {
-      croak "bad ed25519 private key: $e";
+  'email!' => {
+  isa     => NonEmptyStr,
+  trigger => sub ($self, @args) {
+    return unless scalar(@args) && defined($args[0]);
+    $self->{email_digest} = sha256_hex($args[0]);
+  },
+  },
+
+  # If no ed25519_public was present at construction, then
+  # caller needs public and private keys set. Private key
+  # should be made available to caller then object destroyed.
+  'ed25519_private.' => {
+  isa     => NonEmptyStr,
+  builder => sub ($self) {
+    unless (defined $self->{ed25519_public}) {
+      my $pk = Crypt::PK::Ed25519->new->generate_key;
+      $self->{ed25519_private} = $pk->export_key_pem('private');
+      my $public_key = $pk->export_key_pem('public');
+      $self->{ed25519_public}        = $public_key;
+      $self->{ed25519_public_digest} = sha256_hex($public_key);
     }
   },
-);
-
-has ed25519_public => (
-  is       => 'rw',
-  isa      => NonEmptyStr,
-  required => true,
-  trigger  => sub ($self, $v) {
-    try {
-      my $k = Crypt::PK::Ed25519->new(\$v);
-      croak 'not public key' if $k->is_private;
-    }
-    catch ($e) {
-      croak "bad ed25519 public key: $e";
-    }
-    $self->_set_ed25519_public_digest(sha256_hex($v));
   },
-);
 
-has ed25519_public_digest => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => false,
-  writer   => '_set_ed25519_public_digest',
-);
-
-has email => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => true,
-  trigger  => sub ($self, $v) {
-    $self->_set_email_digest(sha256_hex($v));
+  'ed25519_public==' => {
+  isa     => NonEmptyStr,
+  trigger => sub ($self, @args) {
+    return unless scalar(@args) && defined($args[0]);
+    $self->{ed25519_public_digest} = sha256_hex($args[0]);
+    $self->{ed25519_private}       = undef;
   },
-);
+  },
 
-has email_digest => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => false,
-  writer   => '_set_email_digest',
-);
+  'ed25519_public_digest' => NonEmptyStr,
 
-has key_version => (
-  is       => 'rw',
-  isa      => Uuid,
-  required => false,    # only needed at db insert/update
-  coerce   => 1,
-  default  => sub { '00000000-0000-0000-0000-000000000000' },
-);
+  'email_digest' => NonEmptyStr,
 
-has org => (
-  is       => 'ro',
-  isa      => Uuid,
-  required => true,
-  coerce   => 1,
-  default  => sub { '00000000-0000-0000-0000-000000000000' },
-);
+  'key_version==' => {isa => Uuid, coerce => 1},
 
-has password => (
-  is       => 'rw',
-  isa      => NonEmptyStr->where('$_ =~ m/\$argon2/'),
-  required => true,
-  default  => sub { rand_password },
-);
+  'org!' => {isa => Uuid, coerce => 1},
 
-around BUILDARGS => sub {
-  my ($orig, $class, @args) = @_;
-  my $params = $class->$orig(@args);
-
-  # If no ed25519_public was provided, then caller needs
-  # a new key generated.
-  unless (defined $params->{ed25519_public}) {
-    my $pk = Crypt::PK::Ed25519->new->generate_key;
-    $params->{ed25519_private} = $pk->export_key_pem('private');
-    $params->{ed25519_public}  = $pk->export_key_pem('public');
-  }
-
-  return $params;
-};
+  'password==!' => {
+  isa     => NonEmptyStr->where('$_ =~ m/\$argon2/'),
+  default => rand_password,
+  };
 
 sub TO_JSON ($self) {
   return {
@@ -154,7 +99,5 @@ sub random ($class, %args) {
     status         => $args{status}         // $STATUS_ACTIVE,
   );
 }
-
-with 'GL::Model::Base';
 
 __END__

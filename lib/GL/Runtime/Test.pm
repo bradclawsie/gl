@@ -8,13 +8,12 @@ use Types::Standard qw( ArrayRef Defined );
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Moo;
+use Marlin
+  -with => ['GL::Runtime'],
 
-has dbi => (
-  is       => 'ro',
-  isa      => ArrayRef [Defined],
-  required => true,
-  default  => sub {
+  'dbi!' => {
+  isa     => ArrayRef [Defined],
+  default => sub {
     return [
       'dbi:SQLite:dbname=:memory:',
       q{}, q{},
@@ -25,10 +24,9 @@ has dbi => (
         sqlite_unicode                   => 1,
         sqlite_allow_multiple_statements => 1,
       },
-      ],
-      ;
+    ];
   },
-);
+  };
 
 sub BUILD ($self, $args) {
 
@@ -37,7 +35,5 @@ sub BUILD ($self, $args) {
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
   $self->db->dbh->do($schema);
 }
-
-with 'GL::Runtime';
 
 __END__

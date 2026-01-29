@@ -15,24 +15,14 @@ use GL::Type       qw( Role );
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Moo::Role;
+use Marlin::Util qw( true );
+use Marlin::Role
+  'api_version!' => {isa => Str, default => 'v0'},
 
-# Defaults here are for test/development environments.
-
-requires 'dbi';
-
-has api_version => (
-  is       => 'ro',
-  required => true,
-  default  => sub { 'v0' },
-);
-
-has db => (
-  is       => 'ro',
-  isa      => InstanceOf ['DBIx::Connector'],
-  required => true,
-  lazy     => true,
-  default  => sub ($self) {
+  'db' => {
+  isa     => InstanceOf ['DBIx::Connector'],
+  lazy    => true,
+  default => sub ($self) {
     my $conn = DBIx::Connector->new(@{$self->dbi});
     my $dbh  = $conn->dbh;
     for my $pragma (@{$self->dbh_pragmas}) {
@@ -40,57 +30,43 @@ has db => (
     }
     return $conn;
   },
-);
+  },
 
-has dbh_pragmas => (
-  is       => 'ro',
-  isa      => ArrayRef [Str],
-  required => true,
-  default  => sub {
+  'dbh_pragmas!' => {
+  isa     => ArrayRef [Str],
+  default => sub {
     [
       'PRAGMA foreign_keys = ON;',
       'PRAGMA journal_mode = WAL;',
       'PRAGMA synchronous = NORMAL',
     ]
   },
-);
+  },
 
-has default_role => (
-  is       => 'ro',
-  isa      => Role,
-  required => true,
-  default  => sub { $ROLE_TEST },
-);
+  'default_role!' => {isa => Role, default => $ROLE_TEST},
 
-has get_key => (
-  is       => 'ro',
-  isa      => CodeRef,
-  lazy     => true,
-  required => true,
-  builder  => sub ($self) {
+  'get_key' => {
+  isa     => CodeRef,
+  lazy    => true,
+  builder => sub ($self) {
     my $encryption_keys = {
       $self->encryption_key_version => rand_key,
       random_v4uuid()               => rand_key,
       random_v4uuid()               => rand_key,
     };
-    my $get_key = sub ($key_version) {
+    return sub ($key_version) {
       return $encryption_keys->{$key_version} // croak 'bad key_version';
     };
-    return $get_key;
+  }
   },
-);
 
-has [qw(encryption_key_version signing_key)] => (
-  is       => 'ro',
-  isa      => Uuid,
-  required => true,
-  default  => Uuid->generator,
-);
+  'encryption_key_version!' => {isa => Uuid, default => Uuid->generator},
 
-has reqpository_base => (
-  is       => 'ro',
-  required => true,
-  default  => sub { File::Spec->tmpdir },
-);
+  'repository_base' =>
+  {isa => Str, lazy => true, builder => File::Spec->tmpdir},
+
+  'signing_key' => {isa => Uuid, lazy => true, builder => Uuid->generator},
+
+  -requires => [qw( dbi )];
 
 __END__

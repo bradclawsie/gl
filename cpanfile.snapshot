@@ -69,6 +69,15 @@ DISTRIBUTIONS
       strict 0
       utf8 0
       warnings 0
+  B-Hooks-AtRuntime-OnlyCoreDependencies-8.000001
+    pathname: T/TO/TOBYINK/B-Hooks-AtRuntime-OnlyCoreDependencies-8.000001.tar.gz
+    provides:
+      B::Hooks::AtRuntime::OnlyCoreDependencies 8.000001
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 6.17
+      Sub::Util 0
+      perl 5.000800100
   B-Hooks-EndOfScope-0.28
     pathname: E/ET/ETHER/B-Hooks-EndOfScope-0.28.tar.gz
     provides:
@@ -270,6 +279,29 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Class-XSAccessor-1.19
+    pathname: S/SM/SMUELLER/Class-XSAccessor-1.19.tar.gz
+    provides:
+      Class::XSAccessor 1.19
+      Class::XSAccessor::Array 1.19
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::More 0
+      Time::HiRes 0
+      XSLoader 0
+      perl 5.008
+  Class-XSConstructor-0.023001
+    pathname: T/TO/TOBYINK/Class-XSConstructor-0.023001.tar.gz
+    provides:
+      Class::XSConstructor 0.023001
+      Class::XSDelegation 0.023001
+      Class::XSDestructor 0.023001
+      Class::XSReader 0.023001
+    requirements:
+      Exporter::Tiny 1.000000
+      ExtUtils::MakeMaker 6.17
+      List::Util 1.45
+      perl 5.008008
   Clone-0.47
     pathname: A/AT/ATOOMIC/Clone-0.47.tar.gz
     provides:
@@ -1149,6 +1181,18 @@ DISTRIBUTIONS
       Scalar::Util 0
       perl 5.006002
       strict 0
+  Lexical-Accessor-1.001000
+    pathname: T/TO/TOBYINK/Lexical-Accessor-1.001000.tar.gz
+    provides:
+      Lexical::Accessor 1.001000
+      Sub::Accessor::Small 1.001000
+      Sub::HandlesVia::Toolkit::SubAccessorSmall 1.001000
+    requirements:
+      Eval::TypeTiny 0
+      Exporter::Tiny 0
+      ExtUtils::MakeMaker 6.17
+      Sub::HandlesVia 0.025
+      perl 5.008003
   Lingua-EN-Inflect-1.905
     pathname: D/DC/DCONWAY/Lingua-EN-Inflect-1.905.tar.gz
     provides:
@@ -1276,6 +1320,33 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.006
+  Marlin-0.022001
+    pathname: T/TO/TOBYINK/Marlin-0.022001.tar.gz
+    provides:
+      Marlin 0.022001
+      Marlin::Attribute 0.022001
+      Marlin::Attribute::NONE undef
+      Marlin::Meta::Class undef
+      Marlin::Role 0.022001
+      Marlin::Struct 0.022001
+      Marlin::TypeConstraint 0.022001
+      Marlin::Util 0.022001
+      Marlin::X 0.022001
+      MooseX::Marlin 0.022001
+    requirements:
+      B::Hooks::AtRuntime::OnlyCoreDependencies 0
+      Class::Method::Modifiers 0
+      Class::XSAccessor 1.19
+      Class::XSConstructor 0.023000
+      Exporter::Tiny 1.006002
+      ExtUtils::MakeMaker 6.17
+      List::Util 1.45
+      Role::Tiny 0
+      Sub::Accessor::Small 1.001000
+      Sub::HandlesVia 0.052000
+      Type::Tiny 2.010001
+      Type::Tiny::XS 0
+      perl 5.008008
   Math-Random-ISAAC-1.004
     pathname: J/JA/JAWNSY/Math-Random-ISAAC-1.004.tar.gz
     provides:
@@ -3299,6 +3370,15 @@ DISTRIBUTIONS
       Exporter::Tiny 1.006000
       ExtUtils::MakeMaker 6.17
       perl 5.008001
+  Type-Tiny-XS-0.025
+    pathname: T/TO/TOBYINK/Type-Tiny-XS-0.025.tar.gz
+    provides:
+      Type::Tiny::XS 0.025
+      Type::Tiny::XS::Util 0.025
+    requirements:
+      ExtUtils::MakeMaker 6.58
+      ExtUtils::ParseXS 3.16
+      perl 5.008005
   Types-UUID-0.004
     pathname: T/TO/TOBYINK/Types-UUID-0.004.tar.gz
     provides:
