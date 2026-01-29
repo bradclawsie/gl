@@ -2,6 +2,7 @@ package GL::Runtime::Development;
 use v5.42;
 use strictures 2;
 use Carp            qw( croak );
+use File::Basename  qw( dirname );
 use Path::Tiny      qw( path );
 use Types::Standard qw( ArrayRef Defined );
 
@@ -42,7 +43,7 @@ sub BUILD ($self, $args) {
     unless (-d $db_dir) {
       mkdir $db_dir || croak $!;
     }
-    $self->db->dbh->do($schema);
+    $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
   }
 }
 

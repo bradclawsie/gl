@@ -10,12 +10,16 @@ use GL::Runtime::Test        ();
 use GL::Runtime::Development ();
 use GL::Type                 qw( Key );
 
-my $rt = GL::Runtime::Test->new;
-
 subtest 'test db' => sub {
+  my $rt = GL::Runtime::Test->new;
+
   ok(
     lives {
-      my $c = $rt->db->dbh->selectrow_array('select count(*) from user');
+      my $c = $rt->db->run(
+        ping => sub {
+          $_->selectrow_array('select count(*) from user');
+        }
+      );
       is(0, $c);
     },
   ) or note($EVAL_ERROR);
@@ -24,10 +28,16 @@ subtest 'test db' => sub {
 };
 
 subtest 'development db' => sub {
+  my $rt = GL::Runtime::Development->new;
+
   ok(
     lives {
-      GL::Runtime::Development->new->db->dbh->selectrow_array(
-        'select count(*) from user',);
+      my $c = $rt->db->run(
+        ping => sub {
+          $_->selectrow_array('select count(*) from user');
+        }
+      );
+      is(0, $c);
     },
   ) or note($EVAL_ERROR);
 
@@ -35,6 +45,8 @@ subtest 'development db' => sub {
 };
 
 subtest 'get_key' => sub {
+  my $rt = GL::Runtime::Test->new;
+
   ok(
     lives {
       Key->check($rt->get_key->($rt->encryption_key_version));

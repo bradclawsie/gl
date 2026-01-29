@@ -33,7 +33,7 @@ sub BUILD ($self, $args) {
   # build :memory: db
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
-  $self->db->dbh->do($schema);
+  $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
 }
 
 __END__
