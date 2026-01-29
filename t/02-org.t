@@ -22,7 +22,7 @@ subtest 'invalid attr mutations' => sub {
 
   ok(
     dies {
-      GL::User->random->name(q{});
+      GL::Org->random->name(q{});
     },
   ) or note($EVAL_ERROR);
 

@@ -5,28 +5,19 @@ use Crypt::Misc           qw( random_v4uuid );
 use Time::Piece           ();
 use Types::Common::String qw( NonEmptyStr );
 use Types::UUID           qw( Uuid );
-use GL::Attribute         qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 
-use Moo;
+use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-our $SCHEMA_VERSION = 0;
+use Marlin
+  -modifiers,
+  -with => ['GL::Model'],
 
-has name => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => true,
-);
+  'name!' => NonEmptyStr,
 
-has owner => (
-  is       => 'rw',
-  isa      => Uuid,
-  required => true,
-  coerce   => 1,
-  default  => Uuid->generator,
-);
+  'owner!' => {isa => Uuid, coerce => 1};
 
 sub TO_JSON ($self) {
   return {
@@ -48,7 +39,5 @@ sub random ($class, %args) {
     status => $args{status} // $STATUS_ACTIVE,
   );
 }
-
-with 'GL::Model::Base';
 
 __END__
