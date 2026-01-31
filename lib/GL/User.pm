@@ -5,7 +5,9 @@ use Crypt::Digest::SHA256 qw( sha256_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use Crypt::PK::Ed25519    ();
 use Time::Piece           ();
+use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
+use Types::Standard       qw( ClassName HashRef Slurpy Value );
 use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
@@ -65,6 +67,7 @@ use Marlin
 
   'email_digest' => NonEmptyStr,
 
+  # Required before any db operation.
   'key_version==' => {isa => Uuid, coerce => 1},
 
   'org!' => {isa => Uuid, coerce => 1},
@@ -73,6 +76,11 @@ use Marlin
   isa     => NonEmptyStr->where('$_ =~ m/\$argon2/'),
   default => rand_password,
   };
+
+signature_for TO_JSON => (
+  method     => true,
+  positional => [],
+);
 
 sub TO_JSON ($self) {
   return {
@@ -86,17 +94,22 @@ sub TO_JSON ($self) {
   };
 }
 
-# for testing
-sub random ($class, %args) {
+signature_for random => (
+  method     => false,
+  positional => [ ClassName, Slurpy [ HashRef [Value] ] ],
+);
+
+sub random ($class, $args) {
+
+  # Random User just gets new ed25519 key pair by default.
   return $class->new(
-    display_name   => $args{display_name}   // random_v4uuid,
-    ed25519_public => $args{ed25519_public} // undef,
-    email          => $args{email}          // random_v4uuid,
-    id             => $args{id}             // random_v4uuid,
-    org            => $args{org}            // random_v4uuid,
-    password       => $args{password}       // rand_password,
-    role           => $args{role}           // $ROLE_TEST,
-    status         => $args{status}         // $STATUS_ACTIVE,
+    display_name => $args->{display_name} // random_v4uuid,
+    email        => $args->{email}        // random_v4uuid,
+    id           => $args->{id}           // random_v4uuid,
+    org          => $args->{org}          // random_v4uuid,
+    password     => $args->{password}     // rand_password,
+    role         => $args->{role}         // $ROLE_TEST,
+    status       => $args->{status}       // $STATUS_ACTIVE,
   );
 }
 
