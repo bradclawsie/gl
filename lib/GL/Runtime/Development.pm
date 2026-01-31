@@ -28,7 +28,9 @@ use Marlin
       },
     ];
   },
-  };
+  },
+
+  'mode!' => {constant => 'development'};
 
 sub BUILD ($self, $args) {
   my $db_file     = $ENV{DB_FILE}                  || croak 'DB_FILE not set';

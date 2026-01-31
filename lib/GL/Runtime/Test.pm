@@ -26,7 +26,9 @@ use Marlin
       },
     ];
   },
-  };
+  },
+
+  'mode!' => {constant => 'test'};
 
 sub BUILD ($self, $args) {
 

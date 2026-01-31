@@ -3,11 +3,12 @@ use v5.42;
 use strictures 2;
 use Bytes::Random::Secure::Tiny ();
 use Exporter                    qw( import );
+use Readonly                    ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
 
-our $LENGTH = 16;
+Readonly::Scalar our $LENGTH => 16;
 
 sub rand_iv {
   my $rng = Bytes::Random::Secure::Tiny->new;

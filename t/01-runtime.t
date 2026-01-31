@@ -15,6 +15,7 @@ subtest 'test db' => sub {
 
   ok(
     lives {
+      is('test', $rt->mode);
       my $c = $rt->db->run(
         ping => sub {
           $_->selectrow_array('select count(*) from user');
@@ -32,6 +33,7 @@ subtest 'development db' => sub {
 
   ok(
     lives {
+      is('development', $rt->mode);
       my $c = $rt->db->run(
         ping => sub {
           $_->selectrow_array('select count(*) from user');

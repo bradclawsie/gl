@@ -3,6 +3,7 @@ use v5.42;
 use strictures 2;
 use Carp                   qw( croak );
 use Crypt::JWT             qw( decode_jwt encode_jwt );
+use Readonly               ();
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
 use Types::Common::String  qw( NonEmptyStr );
@@ -12,7 +13,7 @@ use Types::UUID            qw( Uuid );
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
 
-our $TOKEN_TYPE = 'Bearer';
+Readonly::Scalar our $TOKEN_TYPE => 'Bearer';
 
 use Marlin
   'exp!' => PositiveInt->where('$_ > time'),
