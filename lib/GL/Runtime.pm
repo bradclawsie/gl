@@ -15,7 +15,6 @@ use GL::Type       qw( Role );
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Marlin::Util qw( true );
 use Marlin::Role
   'api_version!' => {isa => Str, default => 'v0'},
 
