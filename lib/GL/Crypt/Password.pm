@@ -4,11 +4,12 @@ use strictures 2;
 use Bytes::Random::Secure::Tiny ();
 use Crypt::Argon2               qw( argon2_verify argon2id_pass );
 use Exporter                    qw( import );
+use Readonly                    ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-our $SALT_LENGTH = 16;
+Readonly::Scalar our $SALT_LENGTH => 16;
 
 sub text_to_password ($text) {
   my $rng  = Bytes::Random::Secure::Tiny->new;
