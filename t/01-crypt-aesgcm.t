@@ -1,0 +1,64 @@
+use v5.42;
+use strictures 2;
+use English                 qw(-no_match_vars);
+use Test2::V0               qw( done_testing is note ok subtest );
+use Test2::Tools::Compare   qw( like );
+use Test2::Tools::Exception qw( lives );
+use GL::Crypt::AESGCM       qw( decrypt encrypt );
+use GL::Crypt::IV           qw( rand_iv );
+use GL::Crypt::Key          qw( rand_key );
+
+our $VERSION   = '0.01';
+our $AUTHORITY = 'cpan:bclawsie';
+
+my $iv  = rand_iv;
+my $key = rand_key;
+my $s   = 'hello';
+my $encrypted;
+
+subtest 'encrypt decrypt' => sub {
+  ok(
+    lives {
+      $encrypted = encrypt($s, $key, $iv);
+    },
+  ) or note($EVAL_ERROR);
+
+  my $text;
+
+  ok(
+    lives {
+      $text = decrypt($encrypted, $key);
+    },
+  ) or note($EVAL_ERROR);
+
+  is($text, $s);
+
+  done_testing;
+};
+
+subtest 'different key' => sub {
+  ok(
+    lives {
+      $encrypted = encrypt($s, rand_key, $iv);
+    },
+  ) or note($EVAL_ERROR);
+
+  ok(
+    lives {
+      my $caught = false;
+      try {
+        decrypt($encrypted, $key);
+      }
+      catch ($e) {
+        like($e, qr/^bad decrypt/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+done_testing;
+
