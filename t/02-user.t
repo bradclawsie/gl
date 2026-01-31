@@ -14,6 +14,25 @@ our $AUTHORITY = 'cpan:bclawsie';
 subtest 'valid User' => sub {
   ok(
     lives {
+      my $id = random_v4uuid;
+      is($id, GL::User->random(id => $id)->id);
+    },
+  ) or note($EVAL_ERROR);
+
+  ok(
+    lives {
+      my $u = GL::User->random;
+      isnt(undef, $u->ed25519_private);
+      isnt(undef, $u->ed25519_public);
+      my $pk         = Crypt::PK::Ed25519->new->generate_key;
+      my $public_key = $pk->export_key_pem('public');
+      $u->ed25519_public($public_key);
+      is(undef, $u->ed25519_private);
+    },
+  ) or note($EVAL_ERROR);
+
+  ok(
+    lives {
       my $name0  = 'name0';
       my $email0 = 'email0';
 
@@ -21,8 +40,6 @@ subtest 'valid User' => sub {
         display_name => $name0,
         email        => $email0,
         org          => random_v4uuid,
-
-        # key_version => random_v4uuid,
       );
 
       is($u->display_name_digest, sha256_hex($name0));
