@@ -14,7 +14,6 @@ our $AUTHORITY = 'cpan:bclawsie';
 
 our $TOKEN_TYPE = 'Bearer';
 
-use Marlin::Util qw( false true );
 use Marlin
   'exp!' => PositiveInt->where('$_ > time'),
   'id!'  => {isa => Uuid, coerce => 1},
