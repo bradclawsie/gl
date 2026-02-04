@@ -1,12 +1,13 @@
 package GL::Runtime;
 use v5.42;
 use strictures 2;
-use Carp            qw( croak );
-use Crypt::Misc     qw( random_v4uuid );
-use DBIx::Connector ();
-use File::Spec      ();
-use Types::Standard qw( ArrayRef CodeRef InstanceOf Str );
-use Types::UUID     qw( Uuid );
+use Carp                  qw( croak );
+use Crypt::Misc           qw( random_v4uuid );
+use DBIx::Connector       ();
+use File::Spec            ();
+use Types::Standard       qw( ArrayRef CodeRef InstanceOf Str );
+use Types::UUID           qw( Uuid );
+use Types::Common::String qw( NonEmptyStr );
 
 use GL::Attribute  qw( $ROLE_TEST );
 use GL::Crypt::Key qw( rand_key );
@@ -28,7 +29,7 @@ BEGIN {
 }
 
 use Marlin::Role
-  'api_version!' => {isa => Str, default => 'v0'},
+  'api_version!' => {isa => NonEmptyStr, default => 'v0'},
 
   'db' => {
   isa     => InstanceOf ['DBIx::Connector'],
@@ -48,7 +49,7 @@ use Marlin::Role
   isa     => ArrayRef [Str],
   default => sub {
     [
-      'PRAGMA foreign_keys = ON;',
+      'PRAGMA foreign_keys = OFF;',
       'PRAGMA journal_mode = WAL;',
       'PRAGMA synchronous = NORMAL',
     ]
