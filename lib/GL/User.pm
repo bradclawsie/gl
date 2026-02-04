@@ -25,7 +25,7 @@ use Marlin
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{display_name_digest} = sha256_hex($args[0]);
-  },
+  }
   },
 
   'display_name_digest' => NonEmptyStr,
@@ -43,7 +43,7 @@ use Marlin
       $self->{ed25519_public}        = $public_key;
       $self->{ed25519_public_digest} = sha256_hex($public_key);
     }
-  },
+  }
   },
 
   'ed25519_public==' => {
@@ -52,7 +52,7 @@ use Marlin
     return unless scalar(@args) && defined($args[0]);
     $self->{ed25519_public_digest} = sha256_hex($args[0]);
     $self->{ed25519_private}       = undef;
-  },
+  }
   },
 
   'ed25519_public_digest' => NonEmptyStr,
@@ -62,7 +62,7 @@ use Marlin
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{email_digest} = sha256_hex($args[0]);
-  },
+  }
   },
 
   'email_digest' => NonEmptyStr,
