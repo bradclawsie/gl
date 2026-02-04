@@ -29,7 +29,10 @@ BEGIN {
 }
 
 use Marlin::Role
-  'api_version!' => {isa => NonEmptyStr, default => 'v0'},
+  'api_version!' => {
+  isa     => NonEmptyStr,
+  default => 'v0',
+  },
 
   'db' => {
   isa     => InstanceOf ['DBIx::Connector'],
@@ -42,7 +45,7 @@ use Marlin::Role
       $dbh->do($pragma) || croak $!;
     }
     return $conn;
-  },
+  }
   },
 
   'dbh_pragmas!' => {
@@ -53,10 +56,13 @@ use Marlin::Role
       'PRAGMA journal_mode = WAL;',
       'PRAGMA synchronous = NORMAL',
     ]
-  },
+  }
   },
 
-  'default_role!' => {isa => Role, default => $ROLE_TEST},
+  'default_role!' => {
+  isa     => Role,
+  default => $ROLE_TEST,
+  },
 
   'get_key' => {
   isa     => CodeRef,
@@ -73,17 +79,32 @@ use Marlin::Role
   }
   },
 
-  'encryption_key_version!' => {isa => Uuid, default => Uuid->generator},
+  'encryption_key_version!' => {
+  isa     => Uuid,
+  default => Uuid->generator,
+  },
 
-  'repository_base' =>
-  {isa => Str, lazy => true, builder => File::Spec->tmpdir},
+  'repository_base' => {
+  isa     => Str,
+  lazy    => true,
+  builder => File::Spec->tmpdir,
+  },
 
-  'root_org!' => {isa => InstanceOf ['GL::Org'], default => sub { $root_org }},
+  'root_org!' => {
+  isa     => InstanceOf ['GL::Org'],
+  default => sub { $root_org },
+  },
 
-  'root_user!' =>
-  {isa => InstanceOf ['GL::User'], default => sub { $root_user }},
+  'root_user!' => {
+  isa     => InstanceOf ['GL::User'],
+  default => sub { $root_user },
+  },
 
-  'signing_key' => {isa => Uuid, lazy => true, builder => Uuid->generator},
+  'signing_key' => {
+  isa     => Uuid,
+  lazy    => true,
+  builder => Uuid->generator,
+  },
 
   -requires => [qw( dbi mode )];
 

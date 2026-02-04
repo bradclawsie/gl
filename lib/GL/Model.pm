@@ -23,13 +23,22 @@ use Marlin::Role
 
   'insert_order==' => {isa => PositiveOrZeroInt},
 
-  'mtime==' => {isa => PositiveOrZeroInt->where('$_ == 0 || $_ > 1768753518'),},
+  'mtime==' => {
+  isa     => PositiveOrZeroInt->where('$_ == 0 || $_ > 1768753518'),
+  default => 0,
+  },
 
-  'role!' => {isa => Role, default => $ROLE_NORMAL},
+  'role!' => {
+  isa     => Role,
+  default => $ROLE_NORMAL,
+  },
 
   'signature==' => {
   isa    => Uuid,
   coerce => true,
   },
 
-  'status==!' => {isa => Status, default => $STATUS_UNCONFIRMED};
+  'status==!' => {
+  isa     => Status,
+  default => $STATUS_UNCONFIRMED,
+  };
