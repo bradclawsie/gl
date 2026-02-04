@@ -30,14 +30,6 @@ use Marlin
 
   'display_name_digest' => NonEmptyStr,
 
-  'email!' => {
-  isa     => NonEmptyStr,
-  trigger => sub ($self, @args) {
-    return unless scalar(@args) && defined($args[0]);
-    $self->{email_digest} = sha256_hex($args[0]);
-  },
-  },
-
   # If no ed25519_public was present at construction, then
   # caller needs public and private keys set. Private key
   # should be made available to caller then object destroyed.
@@ -64,6 +56,14 @@ use Marlin
   },
 
   'ed25519_public_digest' => NonEmptyStr,
+
+  'email!' => {
+  isa     => NonEmptyStr,
+  trigger => sub ($self, @args) {
+    return unless scalar(@args) && defined($args[0]);
+    $self->{email_digest} = sha256_hex($args[0]);
+  },
+  },
 
   'email_digest' => NonEmptyStr,
 
