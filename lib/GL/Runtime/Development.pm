@@ -27,7 +27,7 @@ use Marlin
         sqlite_allow_multiple_statements => 1,
       },
     ];
-  },
+  }
   },
 
   'mode!' => {constant => 'development'};
