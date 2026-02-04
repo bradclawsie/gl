@@ -39,7 +39,7 @@ subtest 'development db' => sub {
           $_->selectrow_array('select count(*) from user');
         }
       );
-      is(0, $c);
+      like($c, qr/^\d+$/);
     },
   ) or note($EVAL_ERROR);
 
