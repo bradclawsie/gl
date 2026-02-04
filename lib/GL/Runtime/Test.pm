@@ -25,10 +25,10 @@ use Marlin
         sqlite_allow_multiple_statements => 1,
       },
     ];
-  },
+  }
   },
 
-  'mode!' => {constant => 'test'};
+  'mode!' => {constant => 'test',};
 
 sub BUILD ($self, $args) {
 
