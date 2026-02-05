@@ -19,7 +19,7 @@ use Marlin
 
   'name!' => NonEmptyStr,
 
-  'owner!' => {isa => Uuid, coerce => 1};
+  'owner!' => Uuid;
 
 signature_for TO_JSON => (
   method     => true,

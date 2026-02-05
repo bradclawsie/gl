@@ -67,10 +67,9 @@ use Marlin
 
   'email_digest' => NonEmptyStr,
 
-  # Required before any db operation.
-  'key_version==' => {isa => Uuid, coerce => 1},
+  'key_version==' => Uuid,
 
-  'org!' => {isa => Uuid, coerce => 1},
+  'org!' => Uuid,
 
   'password==!' => {
   isa     => NonEmptyStr->where('$_ =~ m/\$argon2/'),
