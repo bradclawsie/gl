@@ -3,42 +3,32 @@ use v5.42;
 use strictures 2;
 use Types::Common::Numeric qw( PositiveOrZeroInt );
 use Types::UUID            qw( Uuid );
-use GL::Attribute          qw( $ROLE_NORMAL $STATUS_UNCONFIRMED );
+use GL::Attribute          qw( $ROLE_TEST $STATUS_ACTIVE );
 use GL::Type               qw( Role Status );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 use Marlin::Role
-  'ctime==' => {
-  isa     => PositiveOrZeroInt->where('$_ == 0 || $_ > 1768753518'),
-  default => 0,
-  },
+  'ctime==' => PositiveOrZeroInt,
 
   'id!' => {
   isa     => Uuid,
-  coerce  => true,
   default => Uuid->generator,
   },
 
-  'insert_order==' => {isa => PositiveOrZeroInt},
+  'insert_order==' => PositiveOrZeroInt,
 
-  'mtime==' => {
-  isa     => PositiveOrZeroInt->where('$_ == 0 || $_ > 1768753518'),
-  default => 0,
-  },
+  'mtime==' => PositiveOrZeroInt,
 
   'role!' => {
   isa     => Role,
-  default => $ROLE_NORMAL,
+  default => $ROLE_TEST,
   },
 
-  'signature==' => {
-  isa    => Uuid,
-  coerce => true,
-  },
+  'signature==' => Uuid,
 
   'status==!' => {
   isa     => Status,
-  default => $STATUS_UNCONFIRMED,
+  default => $STATUS_ACTIVE,
   };

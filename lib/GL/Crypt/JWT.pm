@@ -17,10 +17,10 @@ Readonly::Scalar our $TOKEN_TYPE => 'Bearer';
 
 use Marlin
   'exp!' => PositiveInt->where('$_ > time'),
-  'id!'  => {isa => Uuid, coerce => 1},
+  'id!'  => Uuid,
   'iss!' => NonEmptyStr->where('$_ eq q{GrokLOC.com}'),
   'nbf!' => PositiveInt->where('$_ < time'),
-  'sub!' => {isa => Uuid, coerce => 1};
+  'sub!' => Uuid;
 
 signature_for decode => (
   method     => false,
