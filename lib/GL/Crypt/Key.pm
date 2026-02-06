@@ -10,12 +10,12 @@ our $AUTHORITY = 'cpan:bclawsie';
 
 Readonly::Scalar our $LENGTH => 32;
 
-sub rand_key {
+sub random_key {
   my $rng = Bytes::Random::Secure::Tiny->new;
   return $rng->bytes_hex(int($LENGTH / 2));
 }
 
-our @EXPORT_OK   = qw( rand_key );
-our %EXPORT_TAGS = (all => [qw( rand_key )]);
+our @EXPORT_OK   = qw( random_key );
+our %EXPORT_TAGS = (all => [qw( random_key )]);
 
 __END__
