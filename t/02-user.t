@@ -5,7 +5,9 @@ use Crypt::Misc             qw( random_v4uuid );
 use Crypt::PK::Ed25519      ();
 use English                 qw(-no_match_vars);
 use Test2::V0               qw( done_testing is isnt note ok subtest );
+use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( dies lives );
+use Types::UUID             qw( Uuid );
 
 use GL::User          ();
 use GL::Runtime::Test ();
@@ -120,10 +122,28 @@ subtest 'invalid attr mutations' => sub {
 subtest 'insert' => sub {
   ok(
     lives {
+      my $now  = time;
       my $rt   = GL::Runtime::Test->new;
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
       $user->insert($rt->db, $rt->get_key);
-      ok(true);
+      ok($user->ctime >= $now);
+      ok($user->mtime >= $now);
+      is(1, $user->insert_order);
+      ok(Uuid->check($user->signature));
+    },
+
+    lives {
+      my $caught = false;
+      try {
+        my $rt   = GL::Runtime::Test->new;
+        my $user = GL::User->random;
+        $user->insert($rt->db, $rt->get_key);
+      }
+      catch ($e) {
+        like($e, qr/bad key_version/);
+        $caught = true;
+      }
+      ok($caught);
     },
   ) or note($EVAL_ERROR);
 
