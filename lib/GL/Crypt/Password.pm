@@ -21,14 +21,14 @@ sub verify_password ($password, $text) {
   return argon2_verify($password, $text);
 }
 
-sub rand_password {
+sub random_password {
   my $rng = Bytes::Random::Secure::Tiny->new;
   return text_to_password($rng->bytes_hex(8));
 }
 
-our @EXPORT_OK = qw( text_to_password verify_password rand_password );
+our @EXPORT_OK = qw( text_to_password verify_password random_password );
 our %EXPORT_TAGS =
-  (all => [qw( text_to_password verify_password rand_password)]);
+  (all => [qw( text_to_password verify_password random_password)]);
 
 __END__
 

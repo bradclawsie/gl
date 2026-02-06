@@ -10,7 +10,7 @@ use Types::UUID           qw( Uuid );
 use Types::Common::String qw( NonEmptyStr );
 
 use GL::Attribute  qw( $ROLE_TEST );
-use GL::Crypt::Key qw( rand_key );
+use GL::Crypt::Key qw( random_key );
 use GL::Org        ();
 use GL::Type       qw( Role );
 use GL::User       ();
@@ -70,9 +70,9 @@ use Marlin::Role
   lazy    => true,
   builder => sub ($self) {
     my $encryption_keys = {
-      $self->encryption_key_version => rand_key,
-      random_v4uuid()               => rand_key,
-      random_v4uuid()               => rand_key,
+      $self->encryption_key_version => random_key,
+      random_v4uuid()               => random_key,
+      random_v4uuid()               => random_key,
     };
     return sub ($key_version) {
       return $encryption_keys->{$key_version} // croak 'bad key_version';

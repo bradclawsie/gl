@@ -5,14 +5,14 @@ use Test2::V0               qw( done_testing is note ok subtest );
 use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
 use GL::Crypt::AESGCM       qw( decrypt encrypt );
-use GL::Crypt::IV           qw( rand_iv );
-use GL::Crypt::Key          qw( rand_key );
+use GL::Crypt::IV           qw( random_iv );
+use GL::Crypt::Key          qw( random_key );
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
 
-my $iv  = rand_iv;
-my $key = rand_key;
+my $iv  = random_iv;
+my $key = random_key;
 my $s   = 'hello';
 my $encrypted;
 
@@ -39,7 +39,7 @@ subtest 'encrypt decrypt' => sub {
 subtest 'different key' => sub {
   ok(
     lives {
-      $encrypted = encrypt($s, rand_key, $iv);
+      $encrypted = encrypt($s, random_key, $iv);
     },
   ) or note($EVAL_ERROR);
 

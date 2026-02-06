@@ -15,8 +15,8 @@ use Types::UUID           qw( Uuid );
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 use GL::Type            qw( DB );
 use GL::Crypt::AESGCM   qw( encrypt );
-use GL::Crypt::IV       qw( rand_iv );
-use GL::Crypt::Password qw( rand_password );
+use GL::Crypt::IV       qw( random_iv );
+use GL::Crypt::Password qw( random_password );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -80,7 +80,7 @@ use Marlin
 
   'password==!' => {
   isa     => NonEmptyStr->where('$_ =~ m/\$argon2/'),
-  default => rand_password,
+  default => random_password,
   };
 
 signature_for insert => (
@@ -113,9 +113,10 @@ sub insert ($self, $db, $get_key) {
 
   my $key = $get_key->($self->key_version);
 
-  my $encrypted_ed25519_public = encrypt($self->ed25519_public, $key, rand_iv);
-  my $encrypted_display_name   = encrypt($self->display_name,   $key, rand_iv);
-  my $encrypted_email          = encrypt($self->email,          $key, rand_iv);
+  my $encrypted_ed25519_public =
+    encrypt($self->ed25519_public, $key, random_iv);
+  my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
+  my $encrypted_email        = encrypt($self->email,        $key, random_iv);
 
   my $returning = $db->run(
     fixup => sub {
@@ -171,7 +172,7 @@ sub random ($class, $args) {
     id             => $args->{id}             // random_v4uuid,
     key_version    => $args->{key_version}    // random_v4uuid,
     org            => $args->{org}            // random_v4uuid,
-    password       => $args->{password}       // rand_password,
+    password       => $args->{password}       // random_password,
     role           => $args->{role}           // $ROLE_TEST,
     schema_version => $args->{schema_version} // $SCHEMA_VERSION,
     status         => $args->{status}         // $STATUS_ACTIVE,

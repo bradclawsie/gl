@@ -3,8 +3,8 @@ use strictures 2;
 use English                 qw(-no_match_vars);
 use Test2::V0               qw( done_testing note ok subtest );
 use Test2::Tools::Exception qw( dies lives );
-use GL::Crypt::IV           qw( rand_iv );
-use GL::Crypt::Key          qw( rand_key );
+use GL::Crypt::IV           qw( random_iv );
+use GL::Crypt::Key          qw( random_key );
 use GL::Attribute           qw(
   $ROLE_ADMIN
   $ROLE_NORMAL
@@ -21,7 +21,7 @@ our $AUTHORITY = 'cpan:bclawsie';
 subtest 'IV' => sub {
   ok(
     lives {
-      assert_IV(rand_iv);
+      assert_IV(random_iv);
     },
   ) or note($EVAL_ERROR);
 
@@ -37,7 +37,7 @@ subtest 'IV' => sub {
 subtest 'Key' => sub {
   ok(
     lives {
-      assert_Key(rand_key);
+      assert_Key(random_key);
     },
   ) or note($EVAL_ERROR);
 
