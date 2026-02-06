@@ -1,20 +1,27 @@
 package GL::User;
 use v5.42;
 use strictures 2;
+use Carp                  qw( croak );
 use Crypt::Digest::SHA256 qw( sha256_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use Crypt::PK::Ed25519    ();
+use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard       qw( ClassName HashRef Slurpy Value );
+use Types::Standard       qw( CodeRef ClassName HashRef Slurpy Value );
 use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
+use GL::Type            qw( DB );
+use GL::Crypt::AESGCM   qw( encrypt );
+use GL::Crypt::IV       qw( rand_iv );
 use GL::Crypt::Password qw( rand_password );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
+
+Readonly::Scalar our $SCHEMA_VERSION => 0;
 
 use Marlin
   -modifiers,
@@ -76,6 +83,63 @@ use Marlin
   default => rand_password,
   };
 
+signature_for insert => (
+  method     => true,
+  positional => [ DB, CodeRef ],
+);
+
+sub insert ($self, $db, $get_key) {
+  croak 'key_version needed to insert' unless Uuid->check($self->key_version);
+
+  my $query = <<~'INSERT_USER';
+    insert into user
+    (display_name,
+    display_name_digest,
+    ed25519_public,
+    ed25519_public_digest,
+    email,
+    email_digest,
+    id,
+    key_version,
+    org,
+    password,
+    role,
+    schema_version,
+    status)
+    values
+    (?,?,?,?,?,?,?,?,?,?,?,?,?)
+    returning ctime, insert_order, mtime, signature
+    INSERT_USER
+
+  my $key = $get_key->($self->key_version);
+
+  my $encrypted_ed25519_public = encrypt($self->ed25519_public, $key, rand_iv);
+  my $encrypted_display_name   = encrypt($self->display_name,   $key, rand_iv);
+  my $encrypted_email          = encrypt($self->email,          $key, rand_iv);
+
+  my $returning = $db->run(
+    fixup => sub {
+      return $_->selectrow_hashref(
+        $query,                    undef,
+        $encrypted_display_name,   $self->display_name_digest,
+        $encrypted_ed25519_public, $self->ed25519_public_digest,
+        $encrypted_email,          $self->email_digest,
+        $self->id,                 $self->key_version,
+        $self->org,                $self->password,
+        $self->role,               $self->schema_version,
+        $self->status,
+      );
+    }
+  );
+
+  $self->ctime($returning->{ctime});
+  $self->insert_order($returning->{insert_order});
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+
+  return $self;
+}
+
 signature_for TO_JSON => (
   method     => true,
   positional => [],
@@ -102,13 +166,15 @@ sub random ($class, $args) {
 
   # Random User just gets new ed25519 key pair by default.
   return $class->new(
-    display_name => $args->{display_name} // random_v4uuid,
-    email        => $args->{email}        // random_v4uuid,
-    id           => $args->{id}           // random_v4uuid,
-    org          => $args->{org}          // random_v4uuid,
-    password     => $args->{password}     // rand_password,
-    role         => $args->{role}         // $ROLE_TEST,
-    status       => $args->{status}       // $STATUS_ACTIVE,
+    display_name   => $args->{display_name}   // random_v4uuid,
+    email          => $args->{email}          // random_v4uuid,
+    id             => $args->{id}             // random_v4uuid,
+    key_version    => $args->{key_version}    // random_v4uuid,
+    org            => $args->{org}            // random_v4uuid,
+    password       => $args->{password}       // rand_password,
+    role           => $args->{role}           // $ROLE_TEST,
+    schema_version => $args->{schema_version} // $SCHEMA_VERSION,
+    status         => $args->{status}         // $STATUS_ACTIVE,
   );
 }
 

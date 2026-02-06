@@ -44,6 +44,7 @@ use Marlin::Role
     for my $pragma (@{$self->dbh_pragmas}) {
       $dbh->do($pragma) || croak $!;
     }
+    $dbh->sqlite_create_function('uuid', 0, sub { random_v4uuid }) || croak $!;
     return $conn;
   }
   },
