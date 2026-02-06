@@ -6,7 +6,9 @@ use Crypt::PK::Ed25519      ();
 use English                 qw(-no_match_vars);
 use Test2::V0               qw( done_testing is isnt note ok subtest );
 use Test2::Tools::Exception qw( dies lives );
-use GL::User                ();
+
+use GL::User          ();
+use GL::Runtime::Test ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -109,6 +111,19 @@ subtest 'invalid attr mutations' => sub {
   ok(
     dies {
       GL::User->random->password(q{});
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'insert' => sub {
+  ok(
+    lives {
+      my $rt   = GL::Runtime::Test->new;
+      my $user = GL::User->random(key_version => $rt->encryption_key_version);
+      $user->insert($rt->db, $rt->get_key);
+      ok(true);
     },
   ) or note($EVAL_ERROR);
 

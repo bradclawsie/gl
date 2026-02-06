@@ -17,6 +17,13 @@ use GL::Crypt::Key ();
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
+my $db = 'Type::Tiny'->new(
+  name       => 'DB',
+  constraint => sub { $_ isa DBIx::Connector },
+  message    => sub { 'bad db' },
+);
+__PACKAGE__->meta->add_type($db);
+
 my $iv = 'Type::Tiny'->new(
   name       => 'IV',
   constraint => sub { m/^[\da-f]{$GL::Crypt::IV::LENGTH}$/x },

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS org (
     status INTEGER NOT NULL CHECK (status > 0 AND status < 4),
     ctime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
     mtime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-    signature TEXT UNIQUE NOT NULL,
+    signature TEXT UNIQUE NOT NULL DEFAULT (uuid()),
     role INTEGER NOT NULL CHECK (role > 0 AND role < 4)
 );
 
@@ -29,7 +29,7 @@ FOR EACH ROW
 BEGIN
     UPDATE org SET 
         mtime = strftime('%s', 'now'),
-        signature = LOWER(HEX(RANDOMBLOB(4))) || '-' || LOWER(HEX(RANDOMBLOB(2))) || '-4' || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || SUBSTR('89ab',ABS(RANDOM()) % 4 + 1, 1) || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || LOWER(HEX(RANDOMBLOB(6)))
+        signature = uuid()
     WHERE id = OLD.id;
 END;
 
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS repository (
     status INTEGER NOT NULL CHECK (status > 0 AND status < 4),
     ctime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
     mtime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-    signature TEXT UNIQUE NOT NULL,
+    signature TEXT UNIQUE NOT NULL DEFAULT (uuid()),
     role INTEGER NOT NULL CHECK (role > 0 AND role < 4)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS repository_name_owner ON repository (name, owner);
@@ -70,7 +70,7 @@ FOR EACH ROW
 BEGIN
     UPDATE repository SET 
         mtime = strftime('%s', 'now'),
-        signature = LOWER(HEX(RANDOMBLOB(4))) || '-' || LOWER(HEX(RANDOMBLOB(2))) || '-4' || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || SUBSTR('89ab',ABS(RANDOM()) % 4 + 1, 1) || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || LOWER(HEX(RANDOMBLOB(6)))
+        signature = uuid()
     WHERE id = OLD.id;
 END;
 
@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS user (
     status INTEGER NOT NULL CHECK (status > 0 AND status < 4),
     ctime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
     mtime INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
-    signature TEXT UNIQUE NOT NULL,
+    signature TEXT UNIQUE NOT NULL DEFAULT (uuid()),
     role INTEGER NOT NULL CHECK (role > 0 AND role < 4)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS user_email_digest_org ON user (email_digest, org);
@@ -125,7 +125,7 @@ FOR EACH ROW
 BEGIN
     UPDATE user SET 
         mtime = strftime('%s', 'now'),
-        signature = LOWER(HEX(RANDOMBLOB(4))) || '-' || LOWER(HEX(RANDOMBLOB(2))) || '-4' || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || SUBSTR('89ab',ABS(RANDOM()) % 4 + 1, 1) || SUBSTR(LOWER(HEX(RANDOMBLOB(2))),2) || '-' || LOWER(HEX(RANDOMBLOB(6)))
+        signature = uuid()
     WHERE id = OLD.id;
 END;
 

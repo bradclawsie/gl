@@ -26,6 +26,8 @@ use Marlin::Role
   default => $ROLE_TEST,
   },
 
+  'schema_version' => PositiveOrZeroInt,
+
   'signature==' => Uuid,
 
   'status==!' => {
