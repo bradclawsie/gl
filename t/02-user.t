@@ -29,22 +29,21 @@ subtest 'valid User' => sub {
       my $u = GL::User->random;
       isnt(undef, $u->ed25519_private);
       isnt(undef, $u->ed25519_public);
-      my $pk         = Crypt::PK::Ed25519->new->generate_key;
-      my $public_key = $pk->export_key_pem('public');
-      $u->ed25519_public($public_key);
-      is(undef, $u->ed25519_private);
     },
   ) or note($EVAL_ERROR);
 
   ok(
     lives {
-      my $name0  = 'name0';
-      my $email0 = 'email0@local';
+      my $name0      = 'name0';
+      my $email0     = 'email0@local';
+      my $pk         = Crypt::PK::Ed25519->new->generate_key;
+      my $public_key = $pk->export_key_pem('public');
 
       my $u = GL::User->new(
-        display_name => $name0,
-        email        => $email0,
-        org          => random_v4uuid,
+        display_name   => $name0,
+        ed25519_public => $public_key,
+        email          => $email0,
+        org            => random_v4uuid,
       );
 
       is($u->display_name_digest, sha256_hex($name0));
@@ -54,16 +53,6 @@ subtest 'valid User' => sub {
       $u->display_name($name1);
       is($u->display_name_digest, sha256_hex($name1));
 
-      isnt($u->ed25519_private, undef);
-      is($u->ed25519_public_digest, sha256_hex($u->ed25519_public));
-
-      my $pk         = Crypt::PK::Ed25519->new->generate_key;
-      my $public_key = $pk->export_key_pem('public');
-      $u->ed25519_public($public_key);
-
-      # Setting ed25519_public undefs the ed25519_private.
-      is($u->ed25519_private,       undef);
-      is($u->ed25519_public,        $public_key);
       is($u->ed25519_public_digest, sha256_hex($u->ed25519_public));
     },
   ) or note($EVAL_ERROR);

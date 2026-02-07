@@ -25,6 +25,26 @@ my $db = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($db);
 
+my $digest = 'Type::Tiny'->new(
+  name       => 'Digest',
+  constraint => sub { m/^[\da-fA-F]{64}$/x },
+  message    => sub { 'bad digest' },
+);
+__PACKAGE__->meta->add_type($digest);
+
+my $ed25519 = 'Type::Tiny'->new(
+  name       => 'Ed25519',
+  constraint => sub {
+    m{
+      ^-----BEGIN\s(PUBLIC|PRIVATE)\sKEY-----\s+
+      ([[:alpha:]\d+/=\s]+)
+      -----END\s\1\sKEY-----\s*$
+      }mx;
+  },
+  message => sub { 'bad ed25519' },
+);
+__PACKAGE__->meta->add_type($ed25519);
+
 my $iv = 'Type::Tiny'->new(
   name       => 'IV',
   constraint => sub { m/^[\da-f]{$GL::Crypt::IV::LENGTH}$/x },
