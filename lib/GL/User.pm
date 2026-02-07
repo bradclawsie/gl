@@ -120,20 +120,26 @@ sub insert ($self, $db, $get_key) {
   my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
   my $encrypted_email        = encrypt($self->email,        $key, random_iv);
 
-  my $returning = $db->run(
-    fixup => sub {
-      return $_->selectrow_hashref(
-        $query,                    undef,
-        $encrypted_display_name,   $self->display_name_digest,
-        $encrypted_ed25519_public, $self->ed25519_public_digest,
-        $encrypted_email,          $self->email_digest,
-        $self->id,                 $self->key_version,
-        $self->org,                $self->password,
-        $self->role,               $self->schema_version,
-        $self->status,
-      );
-    }
-  );
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        return $_->selectrow_hashref(
+          $query,                    undef,
+          $encrypted_display_name,   $self->display_name_digest,
+          $encrypted_ed25519_public, $self->ed25519_public_digest,
+          $encrypted_email,          $self->email_digest,
+          $self->id,                 $self->key_version,
+          $self->org,                $self->password,
+          $self->role,               $self->schema_version,
+          $self->status,
+        );
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
 
   $self->ctime($returning->{ctime});
   $self->insert_order($returning->{insert_order});

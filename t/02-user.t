@@ -156,6 +156,68 @@ subtest 'insert' => sub {
   done_testing;
 };
 
+subtest 'insert conflict email' => sub {
+  my $rt = GL::Runtime::Test->new;
+  my $user0;
+
+  ok(
+    lives {
+      $user0 = GL::User->random(key_version => $rt->encryption_key_version,)
+        ->insert($rt->db, $rt->get_key);
+    },
+
+    lives {
+      my $caught = false;
+      try {
+        my $user = GL::User->random(
+          email       => $user0->email,
+          key_version => $rt->encryption_key_version,
+          org         => $user0->org,
+        )->insert($rt->db, $rt->get_key);
+      }
+      catch ($e) {
+        like($e, qr/UNIQUE constraint failed: user.email_digest, user.org/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'insert conflict ed25519_public' => sub {
+  my $rt = GL::Runtime::Test->new;
+  my $user0;
+
+  ok(
+    lives {
+      $user0 = GL::User->random(key_version => $rt->encryption_key_version,)
+        ->insert($rt->db, $rt->get_key);
+    },
+
+    lives {
+      my $caught = false;
+      try {
+        my $user = GL::User->random(
+          key_version => $rt->encryption_key_version,
+          org         => $user0->org,
+        );
+        $user->ed25519_public($user0->ed25519_public);
+        $user->insert($rt->db, $rt->get_key);
+      }
+      catch ($e) {
+        like($e,
+          qr/UNIQUE constraint failed: user.ed25519_public_digest, user.org/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 subtest 'read' => sub {
   ok(
     lives {
