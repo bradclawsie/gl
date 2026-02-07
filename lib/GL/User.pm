@@ -66,7 +66,7 @@ use Marlin
   'ed25519_public_digest' => NonEmptyStr,
 
   'email!' => {
-  isa     => StrMatch[ $Email::Address::addr_spec ],
+  isa     => StrMatch [$Email::Address::addr_spec],
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{email_digest} = sha256_hex($args[0]);
