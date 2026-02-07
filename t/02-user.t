@@ -106,6 +106,12 @@ subtest 'invalid attr mutations' => sub {
 
   ok(
     dies {
+      GL::User->random->email_digest(q{});
+    },
+  ) or note($EVAL_ERROR);
+
+  ok(
+    dies {
       GL::User->random->email(q{});
     },
   ) or note($EVAL_ERROR);
