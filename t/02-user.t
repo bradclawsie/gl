@@ -9,6 +9,7 @@ use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( dies lives );
 use Types::UUID             qw( Uuid );
 
+use GL::Attribute     qw( $STATUS_ACTIVE $STATUS_INACTIVE );
 use GL::User          ();
 use GL::Runtime::Test ();
 
@@ -162,7 +163,7 @@ subtest 'insert conflict email' => sub {
 
   ok(
     lives {
-      $user0 = GL::User->random(key_version => $rt->encryption_key_version,)
+      $user0 = GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key);
     },
 
@@ -192,7 +193,7 @@ subtest 'insert conflict ed25519_public' => sub {
 
   ok(
     lives {
-      $user0 = GL::User->random(key_version => $rt->encryption_key_version,)
+      $user0 = GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key);
     },
 
@@ -255,4 +256,39 @@ subtest 'read miss' => sub {
   done_testing;
 };
 
+subtest 'update status' => sub {
+  ok(
+    lives {
+      my $rt = GL::Runtime::Test->new;
+      my $user =
+        GL::User->random(key_version => $rt->encryption_key_version)
+        ->insert($rt->db, $rt->get_key)
+        ->update_status($rt->db, $STATUS_INACTIVE);
+      is($STATUS_INACTIVE, $user->status);
+      is($STATUS_INACTIVE,
+        GL::User->read($rt->db, $rt->get_key, $user->id)->status);
+      $user->update_status($rt->db, $STATUS_ACTIVE);
+      is($STATUS_ACTIVE, $user->status);
+      is($STATUS_ACTIVE,
+        GL::User->read($rt->db, $rt->get_key, $user->id)->status);
+    },
+
+    lives {
+      my $rt     = GL::Runtime::Test->new;
+      my $caught = false;
+      try {
+        # User is never inserted, so the update doesn't change a row.
+        my $user = GL::User->random(key_version => $rt->encryption_key_version)
+          ->update_status($rt->db, $STATUS_INACTIVE);
+      }
+      catch ($e) {
+        like($e, qr/no rows affected/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
 done_testing;

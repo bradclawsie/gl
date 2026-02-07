@@ -14,7 +14,7 @@ use Types::Standard       qw( CodeRef ClassName HashRef Slurpy StrMatch Value );
 use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type            qw( DB );
+use GL::Type            qw( DB Status );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
@@ -169,6 +169,45 @@ sub read ($class, $db, $get_key, $id) {
   $row->{email}          = decrypt($row->{email},          $key);
 
   return $class->new($row);
+}
+
+signature_for update_status => (
+  method     => true,
+  positional => [ DB, Status ],
+);
+
+sub update_status ($self, $db, $status) {
+  my $query = <<~'UPDATE_USER';
+  update user 
+  set status = ?
+  where id = ?
+  returning mtime, signature, status
+  UPDATE_USER
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($status, $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->status($returning->{status});
+
+  return $self;
 }
 
 signature_for TO_JSON => (
