@@ -14,7 +14,7 @@ use Types::Standard       qw( CodeRef ClassName HashRef Slurpy StrMatch Value );
 use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type            qw( DB Status );
+use GL::Type            qw( DB Digest Ed25519 Status );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
@@ -36,35 +36,22 @@ use Marlin
   }
   },
 
-  'display_name_digest' => NonEmptyStr,
+  'display_name_digest' => Digest,
 
-  # If no ed25519_public was present at construction, then
-  # caller needs public and private keys set. Private key
-  # should be made available to caller then object destroyed.
-  'ed25519_private.' => {
-  isa     => NonEmptyStr,
-  builder => sub ($self) {
-    unless (defined $self->{ed25519_public}) {
-      my $pk = Crypt::PK::Ed25519->new->generate_key;
-      $self->{ed25519_private} = $pk->export_key_pem('private');
-      my $public_key = $pk->export_key_pem('public');
-      $self->{ed25519_public}        = $public_key;
-      $self->{ed25519_public_digest} = sha256_hex($public_key);
-    }
-  },
+  'ed25519_private' => {
+  isa     => Ed25519,
   clearer => true,
   },
 
-  'ed25519_public==' => {
-  isa     => NonEmptyStr,
+  'ed25519_public==!' => {
+  isa     => Ed25519,
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{ed25519_public_digest} = sha256_hex($args[0]);
-    $self->{ed25519_private}       = undef;
   }
   },
 
-  'ed25519_public_digest' => NonEmptyStr,
+  'ed25519_public_digest' => Digest,
 
   'email!' => {
   isa     => StrMatch [$Email::Address::addr_spec],
@@ -74,7 +61,7 @@ use Marlin
   }
   },
 
-  'email_digest' => NonEmptyStr,
+  'email_digest' => Digest,
 
   'key_version==' => Uuid,
 
@@ -173,7 +160,7 @@ sub read ($class, $db, $get_key, $id) {
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, CodeRef, NonEmptyStr ],
+  positional => [ DB, CodeRef, Ed25519 ],
 );
 
 sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
@@ -213,6 +200,8 @@ sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
   $self->ed25519_public($ed25519_public);
+
+  # If a private key exists, it no longer matches, clear it.
   $self->clear_ed25519_private;
 
   croak 'digest' if $ed25519_public_digest ne $self->ed25519_public_digest;
@@ -283,17 +272,21 @@ signature_for random => (
 
 sub random ($class, $args) {
 
+  my $pk = Crypt::PK::Ed25519->new->generate_key;
+
   # Random User just gets new ed25519 key pair by default.
   return $class->new(
-    display_name   => $args->{display_name}   // random_v4uuid,
-    email          => $args->{email}          // random_v4uuid . '@local',
-    id             => $args->{id}             // random_v4uuid,
-    key_version    => $args->{key_version}    // random_v4uuid,
-    org            => $args->{org}            // random_v4uuid,
-    password       => $args->{password}       // random_password,
-    role           => $args->{role}           // $ROLE_TEST,
-    schema_version => $args->{schema_version} // $SCHEMA_VERSION,
-    status         => $args->{status}         // $STATUS_ACTIVE,
+    display_name    => $args->{display_name} // random_v4uuid,
+    ed25519_private => $pk->export_key_pem('private'),
+    ed25519_public  => $pk->export_key_pem('public'),
+    email           => $args->{email}          // random_v4uuid . '@local',
+    id              => $args->{id}             // random_v4uuid,
+    key_version     => $args->{key_version}    // random_v4uuid,
+    org             => $args->{org}            // random_v4uuid,
+    password        => $args->{password}       // random_password,
+    role            => $args->{role}           // $ROLE_TEST,
+    schema_version  => $args->{schema_version} // $SCHEMA_VERSION,
+    status          => $args->{status}         // $STATUS_ACTIVE,
   );
 }
 
