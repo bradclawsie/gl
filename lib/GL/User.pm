@@ -171,6 +171,55 @@ sub read ($class, $db, $get_key, $id) {
   return $class->new($row);
 }
 
+signature_for update_ed25519_public => (
+  method     => true,
+  positional => [ DB, CodeRef, NonEmptyStr ],
+);
+
+sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
+  my $query = <<~'UPDATE_USER';
+  update user 
+  set ed25519_public = ?,
+  ed25519_public_digest = ?
+  where id = ?
+  returning mtime, signature
+  UPDATE_USER
+
+  my $key = $get_key->($self->key_version);
+
+  my $encrypted_ed25519_public = encrypt($ed25519_public, $key, random_iv);
+  my $ed25519_public_digest    = sha256_hex($ed25519_public);
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($encrypted_ed25519_public, $ed25519_public_digest,
+          $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->ed25519_public($ed25519_public);
+  $self->clear_ed25519_private;
+
+  croak 'digest' if $ed25519_public_digest ne $self->ed25519_public_digest;
+
+  return $self;
+}
+
 signature_for update_status => (
   method     => true,
   positional => [ DB, Status ],
@@ -181,7 +230,7 @@ sub update_status ($self, $db, $status) {
   update user 
   set status = ?
   where id = ?
-  returning mtime, signature, status
+  returning mtime, signature
   UPDATE_USER
 
   my $returning;
@@ -205,7 +254,7 @@ sub update_status ($self, $db, $status) {
 
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
-  $self->status($returning->{status});
+  $self->status($status);
 
   return $self;
 }

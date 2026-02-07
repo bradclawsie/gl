@@ -256,6 +256,45 @@ subtest 'read miss' => sub {
   done_testing;
 };
 
+subtest 'update ed25519 public' => sub {
+  ok(
+    lives {
+      my $rt         = GL::Runtime::Test->new;
+      my $pk         = Crypt::PK::Ed25519->new->generate_key;
+      my $public_key = $pk->export_key_pem('public');
+      my $user =
+        GL::User->random(key_version => $rt->encryption_key_version)
+        ->insert($rt->db, $rt->get_key)
+        ->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+      is($public_key,             $user->ed25519_public);
+      is(sha256_hex($public_key), $user->ed25519_public_digest);
+
+      my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
+      is($public_key,             $read_user->ed25519_public);
+      is(sha256_hex($public_key), $read_user->ed25519_public_digest);
+    },
+
+    lives {
+      my $rt         = GL::Runtime::Test->new;
+      my $pk         = Crypt::PK::Ed25519->new->generate_key;
+      my $public_key = $pk->export_key_pem('public');
+      my $caught     = false;
+      try {
+        # User is never inserted, so the update doesn't change a row.
+        my $user = GL::User->random(key_version => $rt->encryption_key_version)
+          ->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+      }
+      catch ($e) {
+        like($e, qr/no rows affected/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 subtest 'update status' => sub {
   ok(
     lives {
@@ -291,4 +330,5 @@ subtest 'update status' => sub {
 
   done_testing;
 };
+
 done_testing;
