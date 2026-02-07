@@ -38,7 +38,7 @@ subtest 'valid User' => sub {
   ok(
     lives {
       my $name0  = 'name0';
-      my $email0 = 'email0';
+      my $email0 = 'email0@local';
 
       my $u = GL::User->new(
         display_name => $name0,
@@ -70,7 +70,7 @@ subtest 'valid User' => sub {
   ok(
     lives {
       my $name0      = 'name0';
-      my $email0     = 'email0';
+      my $email0     = 'email0@local';
       my $pk         = Crypt::PK::Ed25519->new->generate_key;
       my $public_key = $pk->export_key_pem('public');
 
@@ -101,6 +101,12 @@ subtest 'invalid attr mutations' => sub {
   ok(
     dies {
       GL::User->random->ed25519_public_digest(q{});
+    },
+  ) or note($EVAL_ERROR);
+
+  ok(
+    dies {
+      GL::User->random->email_digest(q{});
     },
   ) or note($EVAL_ERROR);
 

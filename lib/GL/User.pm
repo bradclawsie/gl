@@ -5,11 +5,12 @@ use Carp                  qw( croak );
 use Crypt::Digest::SHA256 qw( sha256_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use Crypt::PK::Ed25519    ();
+use Email::Address        ();
 use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard       qw( CodeRef ClassName HashRef Slurpy Value );
+use Types::Standard       qw( CodeRef ClassName HashRef Slurpy StrMatch Value );
 use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
@@ -65,7 +66,7 @@ use Marlin
   'ed25519_public_digest' => NonEmptyStr,
 
   'email!' => {
-  isa     => NonEmptyStr,
+  isa     => StrMatch [$Email::Address::addr_spec],
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{email_digest} = sha256_hex($args[0]);
@@ -168,7 +169,7 @@ sub random ($class, $args) {
   # Random User just gets new ed25519 key pair by default.
   return $class->new(
     display_name   => $args->{display_name}   // random_v4uuid,
-    email          => $args->{email}          // random_v4uuid,
+    email          => $args->{email}          // random_v4uuid . '@local',
     id             => $args->{id}             // random_v4uuid,
     key_version    => $args->{key_version}    // random_v4uuid,
     org            => $args->{org}            // random_v4uuid,

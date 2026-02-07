@@ -58,9 +58,9 @@ test-psgi:
       mkdir -p log && pushd psgi && plackup -E test app.psgi
 
 imports:
-    @find lib -name \*.pm -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
     @find psgi -name \*.psgi -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
     @find t -name \*.t -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
+    @find lib -name \*.pm -print0 | xargs -0 {{ PERLIMPORTS }} 2>/dev/null
 
 tidy:
     @find . -name \*.pm -print0 | xargs -0 {{ PERLTIDY }} 2>/dev/null
