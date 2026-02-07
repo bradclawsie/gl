@@ -156,4 +156,41 @@ subtest 'insert' => sub {
   done_testing;
 };
 
+subtest 'read' => sub {
+  ok(
+    lives {
+      my $now  = time;
+      my $rt   = GL::Runtime::Test->new;
+      my $user = GL::User->random(key_version => $rt->encryption_key_version);
+      $user->insert($rt->db, $rt->get_key);
+
+      my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
+      $user->clear_ed25519_private;
+      $read_user->clear_ed25519_private;
+      is($user, $read_user);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'read miss' => sub {
+  ok(
+    lives {
+      my $caught = false;
+      try {
+        my $rt = GL::Runtime::Test->new;
+        GL::User->read($rt->db, $rt->get_key, random_v4uuid);
+      }
+      catch ($e) {
+        like($e, qr/not found/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 done_testing;

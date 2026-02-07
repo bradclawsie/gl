@@ -15,7 +15,7 @@ use Types::UUID           qw( Uuid );
 
 use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 use GL::Type            qw( DB );
-use GL::Crypt::AESGCM   qw( encrypt );
+use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
 
@@ -51,7 +51,8 @@ use Marlin
       $self->{ed25519_public}        = $public_key;
       $self->{ed25519_public_digest} = sha256_hex($public_key);
     }
-  }
+  },
+  clearer => true,
   },
 
   'ed25519_public==' => {
@@ -140,6 +141,28 @@ sub insert ($self, $db, $get_key) {
   $self->signature($returning->{signature});
 
   return $self;
+}
+
+signature_for read => (
+  method     => false,
+  positional => [ ClassName, DB, CodeRef, Uuid ],
+);
+
+sub read ($class, $db, $get_key, $id) {
+  my $query = 'select * from user where id = ?';
+  my $row   = $db->run(
+    fixup => sub {
+      return $_->selectrow_hashref($query, undef, $id);
+    }
+  );
+  croak 'not found' unless defined $row;
+
+  my $key = $get_key->($row->{key_version});
+  $row->{ed25519_public} = decrypt($row->{ed25519_public}, $key);
+  $row->{display_name}   = decrypt($row->{display_name},   $key);
+  $row->{email}          = decrypt($row->{email},          $key);
+
+  return $class->new($row);
 }
 
 signature_for TO_JSON => (
