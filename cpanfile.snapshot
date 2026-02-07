@@ -1320,19 +1320,20 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.006
-  Marlin-0.022001
-    pathname: T/TO/TOBYINK/Marlin-0.022001.tar.gz
+  Marlin-0.023000
+    pathname: T/TO/TOBYINK/Marlin-0.023000.tar.gz
     provides:
-      Marlin 0.022001
-      Marlin::Attribute 0.022001
+      Marlin 0.023000
+      Marlin::Attribute 0.023000
       Marlin::Attribute::NONE undef
+      Marlin::Attribute::SHVToolkit 0.023000
       Marlin::Meta::Class undef
-      Marlin::Role 0.022001
-      Marlin::Struct 0.022001
-      Marlin::TypeConstraint 0.022001
-      Marlin::Util 0.022001
-      Marlin::X 0.022001
-      MooseX::Marlin 0.022001
+      Marlin::Role 0.023000
+      Marlin::Struct 0.023000
+      Marlin::TypeConstraint 0.023000
+      Marlin::Util 0.023000
+      Marlin::X 0.023000
+      MooseX::Marlin 0.023000
     requirements:
       B::Hooks::AtRuntime::OnlyCoreDependencies 0
       Class::Method::Modifiers 0
@@ -1343,7 +1344,8 @@ DISTRIBUTIONS
       List::Util 1.45
       Role::Tiny 0
       Sub::Accessor::Small 1.001000
-      Sub::HandlesVia 0.052000
+      Sub::HandlesVia 0.053000
+      Sub::HandlesVia::XS 0.001001
       Type::Tiny 2.010001
       Type::Tiny::XS 0
       perl 5.008008
@@ -2767,38 +2769,38 @@ DISTRIBUTIONS
       Sub::Exporter::Progressive 0.001013
     requirements:
       ExtUtils::MakeMaker 0
-  Sub-HandlesVia-0.052000
-    pathname: T/TO/TOBYINK/Sub-HandlesVia-0.052000.tar.gz
+  Sub-HandlesVia-0.053005
+    pathname: T/TO/TOBYINK/Sub-HandlesVia-0.053005.tar.gz
     provides:
-      Sub::HandlesVia 0.052000
-      Sub::HandlesVia::CodeGenerator 0.052000
-      Sub::HandlesVia::Declare 0.052000
-      Sub::HandlesVia::Handler 0.052000
-      Sub::HandlesVia::Handler::CodeRef 0.052000
-      Sub::HandlesVia::Handler::Traditional 0.052000
-      Sub::HandlesVia::HandlerLibrary 0.052000
-      Sub::HandlesVia::HandlerLibrary::Array 0.052000
-      Sub::HandlesVia::HandlerLibrary::Blessed 0.052000
-      Sub::HandlesVia::HandlerLibrary::Bool 0.052000
-      Sub::HandlesVia::HandlerLibrary::Code 0.052000
-      Sub::HandlesVia::HandlerLibrary::Counter 0.052000
-      Sub::HandlesVia::HandlerLibrary::Enum 0.052000
-      Sub::HandlesVia::HandlerLibrary::Hash 0.052000
-      Sub::HandlesVia::HandlerLibrary::Number 0.052000
-      Sub::HandlesVia::HandlerLibrary::Scalar 0.052000
-      Sub::HandlesVia::HandlerLibrary::String 0.052000
+      Sub::HandlesVia 0.053005
+      Sub::HandlesVia::CodeGenerator 0.053005
+      Sub::HandlesVia::Declare 0.053005
+      Sub::HandlesVia::Handler 0.053005
+      Sub::HandlesVia::Handler::CodeRef 0.053005
+      Sub::HandlesVia::Handler::Traditional 0.053005
+      Sub::HandlesVia::HandlerLibrary 0.053005
+      Sub::HandlesVia::HandlerLibrary::Array 0.053005
+      Sub::HandlesVia::HandlerLibrary::Blessed 0.053005
+      Sub::HandlesVia::HandlerLibrary::Bool 0.053005
+      Sub::HandlesVia::HandlerLibrary::Code 0.053005
+      Sub::HandlesVia::HandlerLibrary::Counter 0.053005
+      Sub::HandlesVia::HandlerLibrary::Enum 0.053005
+      Sub::HandlesVia::HandlerLibrary::Hash 0.053005
+      Sub::HandlesVia::HandlerLibrary::Number 0.053005
+      Sub::HandlesVia::HandlerLibrary::Scalar 0.053005
+      Sub::HandlesVia::HandlerLibrary::String 0.053005
       Sub::HandlesVia::Mite undef
-      Sub::HandlesVia::Toolkit 0.052000
-      Sub::HandlesVia::Toolkit::Mite 0.052000
-      Sub::HandlesVia::Toolkit::Moo 0.052000
-      Sub::HandlesVia::Toolkit::Moose 0.052000
-      Sub::HandlesVia::Toolkit::Moose::PackageTrait 0.052000
-      Sub::HandlesVia::Toolkit::Moose::RoleTrait 0.052000
-      Sub::HandlesVia::Toolkit::Mouse 0.052000
-      Sub::HandlesVia::Toolkit::Mouse::PackageTrait 0.052000
-      Sub::HandlesVia::Toolkit::Mouse::RoleTrait 0.052000
-      Sub::HandlesVia::Toolkit::ObjectPad 0.052000
-      Sub::HandlesVia::Toolkit::Plain 0.052000
+      Sub::HandlesVia::Toolkit 0.053005
+      Sub::HandlesVia::Toolkit::Mite 0.053005
+      Sub::HandlesVia::Toolkit::Moo 0.053005
+      Sub::HandlesVia::Toolkit::Moose 0.053005
+      Sub::HandlesVia::Toolkit::Moose::PackageTrait 0.053005
+      Sub::HandlesVia::Toolkit::Moose::RoleTrait 0.053005
+      Sub::HandlesVia::Toolkit::Mouse 0.053005
+      Sub::HandlesVia::Toolkit::Mouse::PackageTrait 0.053005
+      Sub::HandlesVia::Toolkit::Mouse::RoleTrait 0.053005
+      Sub::HandlesVia::Toolkit::ObjectPad 0.053005
+      Sub::HandlesVia::Toolkit::Plain 0.053005
     requirements:
       Class::Method::Modifiers 0
       Exporter::Shiny 0
@@ -2808,6 +2810,14 @@ DISTRIBUTIONS
       Role::Tiny 0
       Type::Tiny 1.004
       perl 5.008001
+  Sub-HandlesVia-XS-0.003004
+    pathname: T/TO/TOBYINK/Sub-HandlesVia-XS-0.003004.tar.gz
+    provides:
+      Sub::HandlesVia::XS 0.003004
+    requirements:
+      ExtUtils::MakeMaker 6.17
+      Types::Common 2.010001
+      perl 5.008008
   Sub-Install-0.929
     pathname: R/RJ/RJBS/Sub-Install-0.929.tar.gz
     provides:
