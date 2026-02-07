@@ -7,6 +7,7 @@ requires 'Crypt::Argon2';
 requires 'Crypt::JWT';
 requires 'DBD::SQLite';
 requires 'DBIx::Connector';
+requires 'Email::Address';
 requires 'English';
 requires 'indirect';
 requires 'JSON::MaybeXS';

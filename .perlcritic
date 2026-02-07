@@ -42,6 +42,6 @@ allowed_values = -10000..100000
 [-ValuesAndExpressions::ProhibitLongChainsOfMethodCalls]
 [-ValuesAndExpressions::RequireInterpolationOfMetachars]
 [Variables::ProhibitPackageVars]
-add_packages = DBI
+add_packages = DBI Email::Address
 [Variables::ProhibitPunctuationVars]
 allow = $@ $! ${^CAPTURE}

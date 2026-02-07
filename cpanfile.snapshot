@@ -734,6 +734,16 @@ DISTRIBUTIONS
       base 0
       strict 0
       warnings 0
+  Email-Address-1.913
+    pathname: R/RJ/RJBS/Email-Address-1.913.tar.gz
+    provides:
+      Email::Address 1.913
+    requirements:
+      ExtUtils::MakeMaker 6.78
+      overload 0
+      perl 5.012
+      strict 0
+      warnings 0
   Encode-Locale-1.05
     pathname: G/GA/GAAS/Encode-Locale-1.05.tar.gz
     provides:
