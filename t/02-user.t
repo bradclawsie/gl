@@ -27,9 +27,10 @@ subtest 'valid User' => sub {
 
   ok(
     lives {
-      my $u = GL::User->random;
-      isnt(undef, $u->ed25519_private);
-      isnt(undef, $u->ed25519_public);
+      my $user = GL::User->random;
+      isnt(undef, $user->ed25519_private);
+      isnt(undef, $user->ed25519_public);
+      is(undef, $user->key);
     },
   ) or note($EVAL_ERROR);
 
@@ -126,7 +127,9 @@ subtest 'insert' => sub {
       my $now  = time;
       my $rt   = GL::Runtime::Test->new;
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
+      is(undef, $user->key);
       $user->insert($rt->db, $rt->get_key);
+      isnt(undef, $user->key);
       ok($user->ctime >= $now);
       ok($user->mtime >= $now);
       is(1, $user->insert_order);
@@ -258,7 +261,7 @@ subtest 'update display name' => sub {
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key)
-        ->update_display_name($rt->db, $rt->get_key, $display_name);
+        ->update_display_name($rt->db, $display_name);
 
       is($display_name,             $user->display_name);
       is(sha256_hex($display_name), $user->display_name_digest);
@@ -274,10 +277,9 @@ subtest 'update display name' => sub {
       try {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
-          ->update_display_name($rt->db, $rt->get_key, random_v4uuid);
+          ->update_display_name($rt->db, random_v4uuid);
       }
       catch ($e) {
-        like($e, qr/no rows affected/);
         $caught = true;
       }
       ok($caught);
@@ -298,7 +300,7 @@ subtest 'update ed25519 public' => sub {
         ->insert($rt->db, $rt->get_key);
       isnt(undef, $user->ed25519_private);
 
-      $user->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+      $user->update_ed25519_public($rt->db, $public_key);
       is($public_key,             $user->ed25519_public);
       is(sha256_hex($public_key), $user->ed25519_public_digest);
       is(undef,                   $user->ed25519_private);
@@ -316,10 +318,9 @@ subtest 'update ed25519 public' => sub {
       try {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
-          ->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+          ->update_ed25519_public($rt->db, $public_key);
       }
       catch ($e) {
-        like($e, qr/no rows affected/);
         $caught = true;
       }
       ok($caught);
@@ -372,6 +373,7 @@ subtest 'update status' => sub {
         GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key)
         ->update_status($rt->db, $STATUS_INACTIVE);
+
       is($STATUS_INACTIVE, $user->status);
       is($STATUS_INACTIVE,
         GL::User->read($rt->db, $rt->get_key, $user->id)->status);

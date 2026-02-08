@@ -14,7 +14,7 @@ use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
 use Types::UUID     qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type      qw( DB Digest Ed25519Private Ed25519Public Password Status );
+use GL::Type qw( DB Digest Ed25519Private Ed25519Public Key Password Status );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
@@ -65,6 +65,8 @@ use Marlin
   },
 
   'email_digest' => Digest,
+
+  'key==' => Maybe [Key],
 
   'key_version==' => Uuid,
 
@@ -153,6 +155,7 @@ sub insert ($self, $db, $get_key) {
   $self->insert_order($returning->{insert_order});
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
+  $self->key($key);
 
   return $self;
 }
@@ -175,16 +178,17 @@ sub read ($class, $db, $get_key, $id) {
   $row->{ed25519_public} = decrypt($row->{ed25519_public}, $key);
   $row->{display_name}   = decrypt($row->{display_name},   $key);
   $row->{email}          = decrypt($row->{email},          $key);
+  $row->{key}            = $key;
 
   return $class->new($row);
 }
 
 signature_for update_display_name => (
   method     => true,
-  positional => [ DB, CodeRef, NonEmptyStr ],
+  positional => [ DB, NonEmptyStr ],
 );
 
-sub update_display_name ($self, $db, $get_key, $display_name) {
+sub update_display_name ($self, $db, $display_name) {
   my $query = <<~'UPDATE_USER';
   update user 
   set display_name = ?,
@@ -193,7 +197,7 @@ sub update_display_name ($self, $db, $get_key, $display_name) {
   returning mtime, signature
   UPDATE_USER
 
-  my $key = $get_key->($self->key_version);
+  my $key = $self->key // croak 'key missing';
 
   my $encrypted_display_name = encrypt($display_name, $key, random_iv);
   my $display_name_digest    = sha256_hex($display_name);
@@ -228,10 +232,10 @@ sub update_display_name ($self, $db, $get_key, $display_name) {
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, CodeRef, Ed25519Public ],
+  positional => [ DB, Ed25519Public ],
 );
 
-sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
+sub update_ed25519_public ($self, $db, $ed25519_public) {
   my $query = <<~'UPDATE_USER';
   update user 
   set ed25519_public = ?,
@@ -240,7 +244,7 @@ sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
   returning mtime, signature
   UPDATE_USER
 
-  my $key = $get_key->($self->key_version);
+  my $key = $self->key // croak 'key missing';
 
   my $encrypted_ed25519_public = encrypt($ed25519_public, $key, random_iv);
   my $ed25519_public_digest    = sha256_hex($ed25519_public);
