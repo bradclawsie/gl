@@ -12,7 +12,7 @@
 cache                           = false # setting this to true is currently discouraged
 ignore_modules                  = ["Type::Library", "Type::Tiny"]
 ignore_modules_filename         = ""
-ignore_modules_pattern          = "^Marlin" # regex like "^(Foo|Foo::Bar)"
+ignore_modules_pattern          = "^Marlin*" # regex like "^(Foo|Foo::Bar)"
 ignore_modules_pattern_filename = ""
 libs                            = ["lib"]
 log_filename                    = ""

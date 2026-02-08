@@ -32,18 +32,31 @@ my $digest = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($digest);
 
-my $ed25519 = 'Type::Tiny'->new(
-  name       => 'Ed25519',
+my $ed25519_private = 'Type::Tiny'->new(
+  name       => 'Ed25519Private',
   constraint => sub {
     m{
-      ^-----BEGIN\s(PUBLIC|PRIVATE)\sKEY-----\s+
+      ^-----BEGIN\s(PRIVATE)\sKEY-----\s+
       ([[:alpha:]\d+/=\s]+)
       -----END\s\1\sKEY-----\s*$
       }mx;
   },
   message => sub { 'bad ed25519' },
 );
-__PACKAGE__->meta->add_type($ed25519);
+__PACKAGE__->meta->add_type($ed25519_private);
+
+my $ed25519_public = 'Type::Tiny'->new(
+  name       => 'Ed25519Public',
+  constraint => sub {
+    m{
+      ^-----BEGIN\s(PUBLIC)\sKEY-----\s+
+      ([[:alpha:]\d+/=\s]+)
+      -----END\s\1\sKEY-----\s*$
+      }mx;
+  },
+  message => sub { 'bad ed25519' },
+);
+__PACKAGE__->meta->add_type($ed25519_public);
 
 my $iv = 'Type::Tiny'->new(
   name       => 'IV',
@@ -58,6 +71,13 @@ my $key = 'Type::Tiny'->new(
   message    => sub { 'bad key' },
 );
 __PACKAGE__->meta->add_type($key);
+
+my $password = 'Type::Tiny'->new(
+  name       => 'Password',
+  constraint => sub { m/^\$argon2/x },
+  message    => sub { 'bad password' },
+);
+__PACKAGE__->meta->add_type($password);
 
 my $role = 'Type::Tiny'->new(
   name       => 'Role',
