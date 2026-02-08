@@ -9,9 +9,10 @@ use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( dies lives );
 use Types::UUID             qw( Uuid );
 
-use GL::Attribute     qw( $STATUS_ACTIVE $STATUS_INACTIVE );
-use GL::User          ();
-use GL::Runtime::Test ();
+use GL::Attribute       qw( $STATUS_ACTIVE $STATUS_INACTIVE );
+use GL::Crypt::Password qw( random_password );
+use GL::User            ();
+use GL::Runtime::Test   ();
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -44,6 +45,7 @@ subtest 'valid User' => sub {
         ed25519_public => $public_key,
         email          => $email0,
         org            => random_v4uuid,
+        password       => random_password,
       );
 
       is(undef, $u->ed25519_private);
@@ -68,9 +70,10 @@ subtest 'valid User' => sub {
 
       my $u = GL::User->new(
         display_name   => $name0,
+        ed25519_public => $public_key,
         email          => $email0,
         org            => random_v4uuid,
-        ed25519_public => $public_key,
+        password       => random_password,
       );
 
       is($u->ed25519_private,       undef);
