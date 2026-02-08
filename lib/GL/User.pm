@@ -70,10 +70,8 @@ use Marlin
 
   'org!' => Uuid,
 
-  'password==!' => {
-  isa     => Password,
-  default => random_password,
-  };
+  'password==!' => Password,
+  ;
 
 signature_for ed25519 => (
   method     => true,
