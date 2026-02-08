@@ -250,6 +250,45 @@ subtest 'read miss' => sub {
   done_testing;
 };
 
+subtest 'update display name' => sub {
+  ok(
+    lives {
+      my $rt           = GL::Runtime::Test->new;
+      my $display_name = random_v4uuid;
+      my $user =
+        GL::User->random(key_version => $rt->encryption_key_version)
+        ->insert($rt->db, $rt->get_key);
+
+      $user->update_display_name($rt->db, $rt->get_key, $display_name);
+      is($display_name,             $user->display_name);
+      is(sha256_hex($display_name), $user->display_name_digest);
+
+      my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
+      is($display_name,             $read_user->display_name);
+      is(sha256_hex($display_name), $read_user->display_name_digest);
+    },
+
+    lives {
+      my $rt           = GL::Runtime::Test->new;
+      my $pk           = Crypt::PK::Ed25519->new->generate_key;
+      my $display_name = $pk->export_key_pem('public');
+      my $caught       = false;
+      try {
+        # User is never inserted, so the update doesn't change a row.
+        my $user = GL::User->random(key_version => $rt->encryption_key_version)
+          ->update_display_name($rt->db, $rt->get_key, $display_name);
+      }
+      catch ($e) {
+        like($e, qr/no rows affected/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or warn($EVAL_ERROR);
+
+  done_testing;
+};
+
 subtest 'update ed25519 public' => sub {
   ok(
     lives {

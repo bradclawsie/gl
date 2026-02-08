@@ -179,6 +179,53 @@ sub read ($class, $db, $get_key, $id) {
   return $class->new($row);
 }
 
+signature_for update_display_name => (
+  method     => true,
+  positional => [ DB, CodeRef, NonEmptyStr ],
+);
+
+sub update_display_name ($self, $db, $get_key, $display_name) {
+  my $query = <<~'UPDATE_USER';
+  update user 
+  set display_name = ?,
+  display_name_digest = ?
+  where id = ?
+  returning mtime, signature
+  UPDATE_USER
+
+  my $key = $get_key->($self->key_version);
+
+  my $encrypted_display_name = encrypt($display_name, $key, random_iv);
+  my $display_name_digest    = sha256_hex($display_name);
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($encrypted_display_name, $display_name_digest, $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->display_name($display_name);
+
+  croak 'digest' if $display_name_digest ne $self->display_name_digest;
+
+  return $self;
+}
+
 signature_for update_ed25519_public => (
   method     => true,
   positional => [ DB, CodeRef, Ed25519Public ],
