@@ -1,5 +1,6 @@
 use v5.42;
 use strictures 2;
+use Carp                    qw( croak );
 use Crypt::Digest::SHA256   qw( sha256_hex );
 use Crypt::Misc             qw( random_v4uuid );
 use Crypt::PK::Ed25519      ();
@@ -10,6 +11,7 @@ use Test2::Tools::Exception qw( dies lives );
 use Types::UUID             qw( Uuid );
 
 use GL::Attribute       qw( $STATUS_ACTIVE $STATUS_INACTIVE );
+use GL::Crypt::Key      qw( random_key );
 use GL::Crypt::Password qw( random_password );
 use GL::User            ();
 use GL::Runtime::Test   ();
@@ -248,6 +250,72 @@ subtest 'read miss' => sub {
       }
       ok($caught);
     },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'reencrypt' => sub {
+
+  # Build a custom get_key with keys that are all known.
+  my $current_encryption_key_version = random_v4uuid;
+  my $next_encryption_key_version    = random_v4uuid;
+  my $encryption_keys                = {
+    $current_encryption_key_version => random_key,
+    $next_encryption_key_version    => random_key,
+  };
+  my $get_key = sub ($key_version) {
+    return $encryption_keys->{$key_version} // croak 'bad key_version';
+  };
+
+  ok(
+    lives {
+      my $rt = GL::Runtime::Test->new(
+        encryption_key_version => $current_encryption_key_version,
+        get_key                => $get_key,
+      );
+      is($current_encryption_key_version, $rt->encryption_key_version,);
+      is(
+        $encryption_keys->{$current_encryption_key_version},
+        $rt->get_key->($current_encryption_key_version),
+      );
+      is(
+        $encryption_keys->{$rt->encryption_key_version},
+        $rt->get_key->($current_encryption_key_version),
+      );
+
+      my $user = GL::User->random(key_version => $rt->encryption_key_version);
+      $user->insert($rt->db, $rt->get_key);
+      is($current_encryption_key_version,             $user->key_version,);
+      is($get_key->($current_encryption_key_version), $user->key,);
+
+      $user->reencrypt($rt->db, $rt->get_key, $next_encryption_key_version);
+      my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
+      $user->clear_ed25519_private;
+      is($read_user, $user);
+
+      is($next_encryption_key_version,             $read_user->key_version,);
+      is($get_key->($next_encryption_key_version), $read_user->key,);
+    },
+
+    lives {
+      my $rt = GL::Runtime::Test->new(
+        encryption_key_version => $current_encryption_key_version,
+        get_key                => $get_key,
+      );
+      my $caught = false;
+
+      try {
+        # User is never inserted, so the update doesn't change a row.
+        my $user = GL::User->random(key_version => $rt->encryption_key_version)
+          ->reencrypt($rt->db, $rt->get_key, $next_encryption_key_version);
+      }
+      catch ($e) {
+        $caught = true;
+      }
+      ok($caught);
+    },
+
   ) or note($EVAL_ERROR);
 
   done_testing;
