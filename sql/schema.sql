@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS org (
     role INTEGER NOT NULL CHECK (role > 0 AND role < 4)
 );
 
-CREATE TRIGGER update_org_metadata AFTER UPDATE ON org
+CREATE TRIGGER update_org_metadata BEFORE UPDATE ON org
 FOR EACH ROW
 BEGIN
     UPDATE org SET 
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS repository (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS repository_name_owner ON repository (name, owner);
 
-CREATE TRIGGER update_repository_metadata AFTER UPDATE ON repository
+CREATE TRIGGER update_repository_metadata BEFORE UPDATE ON repository
 FOR EACH ROW
 BEGIN
     UPDATE repository SET 
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS user (
 CREATE UNIQUE INDEX IF NOT EXISTS user_email_digest_org ON user (email_digest, org);
 CREATE UNIQUE INDEX IF NOT EXISTS user_ed25519_public_digest_org ON user (ed25519_public_digest, org);
 
-CREATE TRIGGER update_user_metadata AFTER UPDATE ON user
+CREATE TRIGGER update_user_metadata BEFORE UPDATE ON user
 FOR EACH ROW
 BEGIN
     UPDATE user SET 
