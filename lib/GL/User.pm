@@ -274,6 +274,45 @@ sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
   return $self;
 }
 
+signature_for update_password => (
+  method     => true,
+  positional => [ DB, Password ],
+);
+
+sub update_password ($self, $db, $password) {
+  my $query = <<~'UPDATE_USER';
+  update user 
+  set password = ?
+  where id = ?
+  returning mtime, signature
+  UPDATE_USER
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($password, $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->password($password);
+
+  return $self;
+}
+
 signature_for update_status => (
   method     => true,
   positional => [ DB, Status ],

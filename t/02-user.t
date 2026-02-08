@@ -257,9 +257,9 @@ subtest 'update display name' => sub {
       my $display_name = random_v4uuid;
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key)
+        ->update_display_name($rt->db, $rt->get_key, $display_name);
 
-      $user->update_display_name($rt->db, $rt->get_key, $display_name);
       is($display_name,             $user->display_name);
       is(sha256_hex($display_name), $user->display_name_digest);
 
@@ -317,6 +317,41 @@ subtest 'update ed25519 public' => sub {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
           ->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+      }
+      catch ($e) {
+        like($e, qr/no rows affected/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or warn($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'update password' => sub {
+  ok(
+    lives {
+      my $rt       = GL::Runtime::Test->new;
+      my $password = random_password;
+      my $user =
+        GL::User->random(key_version => $rt->encryption_key_version)
+        ->insert($rt->db, $rt->get_key)
+        ->update_password($rt->db, $password);
+
+      is($password, $user->password);
+
+      my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
+      is($password, $read_user->password);
+    },
+
+    lives {
+      my $rt     = GL::Runtime::Test->new;
+      my $caught = false;
+      try {
+        # User is never inserted, so the update doesn't change a row.
+        my $user = GL::User->random(key_version => $rt->encryption_key_version)
+          ->update_password($rt->db, random_password);
       }
       catch ($e) {
         like($e, qr/no rows affected/);
