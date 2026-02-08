@@ -46,6 +46,8 @@ subtest 'valid User' => sub {
         org            => random_v4uuid,
       );
 
+      is(undef, $u->ed25519_private);
+
       is($u->display_name_digest, sha256_hex($name0));
       is($u->email_digest,        sha256_hex($email0));
 
@@ -193,7 +195,7 @@ subtest 'insert conflict ed25519_public' => sub {
           key_version => $rt->encryption_key_version,
           org         => $user0->org,
         );
-        $user->ed25519_public($user0->ed25519_public);
+        $user->ed25519($user0->ed25519_public, undef);
         $user->insert($rt->db, $rt->get_key);
       }
       catch ($e) {
@@ -253,10 +255,13 @@ subtest 'update ed25519 public' => sub {
       my $public_key = $pk->export_key_pem('public');
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key)
-        ->update_ed25519_public($rt->db, $rt->get_key, $public_key);
+        ->insert($rt->db, $rt->get_key);
+      isnt(undef, $user->ed25519_private);
+
+      $user->update_ed25519_public($rt->db, $rt->get_key, $public_key);
       is($public_key,             $user->ed25519_public);
       is(sha256_hex($public_key), $user->ed25519_public_digest);
+      is(undef,                   $user->ed25519_private);
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       is($public_key,             $read_user->ed25519_public);
@@ -279,7 +284,7 @@ subtest 'update ed25519 public' => sub {
       }
       ok($caught);
     },
-  ) or note($EVAL_ERROR);
+  ) or warn($EVAL_ERROR);
 
   done_testing;
 };

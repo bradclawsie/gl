@@ -10,11 +10,11 @@ use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard       qw( CodeRef ClassName HashRef Slurpy StrMatch Value );
-use Types::UUID           qw( Uuid );
+use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
+use Types::UUID     qw( Uuid );
 
-use GL::Attribute       qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type            qw( DB Digest Ed25519 Status );
+use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
+use GL::Type      qw( DB Digest Ed25519Private Ed25519Public Password Status );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
@@ -38,13 +38,16 @@ use Marlin
 
   'display_name_digest' => Digest,
 
+  # Typically this is undefined. If it is ever defined, it is
+  # created for the purpose of delivering it to the caller once,
+  # and then should be cleared.
   'ed25519_private' => {
-  isa     => Ed25519,
+  isa     => Maybe [Ed25519Private],
   clearer => true,
   },
 
-  'ed25519_public==!' => {
-  isa     => Ed25519,
+  'ed25519_public!' => {
+  isa     => Ed25519Public,
   trigger => sub ($self, @args) {
     return unless scalar(@args) && defined($args[0]);
     $self->{ed25519_public_digest} = sha256_hex($args[0]);
@@ -68,9 +71,29 @@ use Marlin
   'org!' => Uuid,
 
   'password==!' => {
-  isa     => NonEmptyStr->where('$_ =~ m/\$argon2/'),
+  isa     => Password,
   default => random_password,
   };
+
+signature_for ed25519 => (
+  method     => true,
+  positional => [ Ed25519Public, Maybe [Ed25519Private] ],
+);
+
+# ed25519 provides for setting both the public and private
+# keys. If the public key is ever changed, it is assumed
+# that the caller possesses the private component, so
+# any local private key held must be erased.
+sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
+  $self->{ed25519_public}        = $ed25519_public;
+  $self->{ed25519_public_digest} = sha256_hex($ed25519_public);
+  if (defined $ed25519_private) {
+    $self->{ed25519_private} = $ed25519_private;
+  }
+  else {
+    $self->clear_ed25519_private;
+  }
+}
 
 signature_for insert => (
   method     => true,
@@ -160,7 +183,7 @@ sub read ($class, $db, $get_key, $id) {
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, CodeRef, Ed25519 ],
+  positional => [ DB, CodeRef, Ed25519Public ],
 );
 
 sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
@@ -199,10 +222,7 @@ sub update_ed25519_public ($self, $db, $get_key, $ed25519_public) {
 
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
-  $self->ed25519_public($ed25519_public);
-
-  # If a private key exists, it no longer matches, clear it.
-  $self->clear_ed25519_private;
+  $self->ed25519($ed25519_public, undef);
 
   croak 'digest' if $ed25519_public_digest ne $self->ed25519_public_digest;
 
