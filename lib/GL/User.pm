@@ -125,10 +125,10 @@ sub insert ($self, $db, $get_key) {
 
   my $key = $get_key->($self->key_version);
 
+  my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
   my $encrypted_ed25519_public =
     encrypt($self->ed25519_public, $key, random_iv);
-  my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
-  my $encrypted_email        = encrypt($self->email,        $key, random_iv);
+  my $encrypted_email = encrypt($self->email, $key, random_iv);
 
   my $returning;
   try {
@@ -181,6 +181,57 @@ sub read ($class, $db, $get_key, $id) {
   $row->{key}            = $key;
 
   return $class->new($row);
+}
+
+signature_for reencrypt => (
+  method     => true,
+  positional => [ DB, CodeRef, Uuid ],
+);
+
+sub reencrypt ($self, $db, $get_key, $key_version) {
+  my $key = $get_key->($key_version);
+
+  my $query = <<~'UPDATE_USER';
+  update user set
+  display_name = $1,
+  ed25519_public = $2,
+  email = $3,
+  key_version = $4
+  where id = $5
+  returning mtime, signature
+  UPDATE_USER
+
+  my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
+  my $encrypted_ed25519_public =
+    encrypt($self->ed25519_public, $key, random_iv);
+  my $encrypted_email = encrypt($self->email, $key, random_iv);
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($encrypted_display_name, $encrypted_ed25519_public,
+          $encrypted_email, $key_version, $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->key_version($key_version);
+  $self->key($key);
+
+  return $self;
 }
 
 signature_for update_display_name => (
