@@ -286,10 +286,15 @@ subtest 'reencrypt' => sub {
 
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
       $user->insert($rt->db, $rt->get_key);
+      my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
       is($current_encryption_key_version,             $user->key_version,);
       is($get_key->($current_encryption_key_version), $user->key,);
 
       $user->reencrypt($rt->db, $rt->get_key, $next_encryption_key_version);
+
+      ok($user->mtime >= $old_mtime);
+      isnt($user->signature, $old_signature);
+
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       $user->clear_ed25519_private;
       is($read_user, $user);
@@ -328,9 +333,13 @@ subtest 'update display name' => sub {
       my $display_name = random_v4uuid;
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key)
-        ->update_display_name($rt->db, $display_name);
+        ->insert($rt->db, $rt->get_key);
+      my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
 
+      $user->update_display_name($rt->db, $display_name);
+
+      ok($user->mtime >= $old_mtime);
+      isnt($user->signature, $old_signature);
       is($display_name,             $user->display_name);
       is(sha256_hex($display_name), $user->display_name_digest);
 
@@ -366,9 +375,13 @@ subtest 'update ed25519 public' => sub {
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key);
+      my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
       isnt(undef, $user->ed25519_private);
 
       $user->update_ed25519_public($rt->db, $public_key);
+
+      ok($user->mtime >= $old_mtime);
+      isnt($user->signature, $old_signature);
       is($public_key,             $user->ed25519_public);
       is(sha256_hex($public_key), $user->ed25519_public_digest);
       is(undef,                   $user->ed25519_private);
