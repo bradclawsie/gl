@@ -269,14 +269,12 @@ subtest 'update display name' => sub {
     },
 
     lives {
-      my $rt           = GL::Runtime::Test->new;
-      my $pk           = Crypt::PK::Ed25519->new->generate_key;
-      my $display_name = $pk->export_key_pem('public');
-      my $caught       = false;
+      my $rt     = GL::Runtime::Test->new;
+      my $caught = false;
       try {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
-          ->update_display_name($rt->db, $rt->get_key, $display_name);
+          ->update_display_name($rt->db, $rt->get_key, random_v4uuid);
       }
       catch ($e) {
         like($e, qr/no rows affected/);
