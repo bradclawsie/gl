@@ -18,16 +18,6 @@ use GL::User       ();
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-# Build root_org and root_user suitable for test and development.
-my ($root_org, $root_user);
-
-BEGIN {
-  my $org   = random_v4uuid;
-  my $owner = random_v4uuid;
-  $root_org  = GL::Org->random(id => $org, owner => $owner);
-  $root_user = GL::User->random(id => $owner, org => $org);
-}
-
 use Marlin::Role
   'api_version!' => {
   isa     => NonEmptyStr,
@@ -94,14 +84,9 @@ use Marlin::Role
   builder => File::Spec->tmpdir,
   },
 
-  'root_org!' => {
+  'root!' => {
   isa     => InstanceOf ['GL::Org'],
-  default => sub { $root_org },
-  },
-
-  'root_user!' => {
-  isa     => InstanceOf ['GL::User'],
-  default => sub { $root_user },
+  default => sub { GL::Org->random },
   },
 
   'signing_key' => {
