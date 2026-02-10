@@ -146,7 +146,7 @@ subtest 'insert' => sub {
         $user->insert($rt->db, $rt->get_key);
       }
       catch ($e) {
-        like($e, qr/bad key_version/);
+        like($e, qr/key_version needed/);
         $caught = true;
       }
       ok($caught);
@@ -274,7 +274,7 @@ subtest 'reencrypt' => sub {
         encryption_key_version => $current_encryption_key_version,
         get_key                => $get_key,
       );
-      is($current_encryption_key_version, $rt->encryption_key_version,);
+      is($current_encryption_key_version, $rt->encryption_key_version);
       is(
         $encryption_keys->{$current_encryption_key_version},
         $rt->get_key->($current_encryption_key_version),
@@ -287,8 +287,8 @@ subtest 'reencrypt' => sub {
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
       $user->insert($rt->db, $rt->get_key);
       my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
-      is($current_encryption_key_version,             $user->key_version,);
-      is($get_key->($current_encryption_key_version), $user->key,);
+      is($current_encryption_key_version,             $user->key_version);
+      is($get_key->($current_encryption_key_version), $user->key);
 
       $user->reencrypt($rt->db, $rt->get_key, $next_encryption_key_version);
 
@@ -299,8 +299,8 @@ subtest 'reencrypt' => sub {
       $user->clear_ed25519_private;
       is($read_user, $user);
 
-      is($next_encryption_key_version,             $read_user->key_version,);
-      is($get_key->($next_encryption_key_version), $read_user->key,);
+      is($next_encryption_key_version,             $read_user->key_version);
+      is($get_key->($next_encryption_key_version), $read_user->key);
     },
 
     lives {

@@ -33,6 +33,8 @@ use Marlin
   'mode!' => {constant => 'development'};
 
 sub BUILD ($self, $args) {
+
+  # Check and maybe build the file db.
   my $db_file     = $ENV{DB_FILE}                  || croak 'DB_FILE not set';
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
@@ -47,6 +49,9 @@ sub BUILD ($self, $args) {
     }
     $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
   }
+
+  # Finish setting up root.
+  $self->root->owner->key_version($self->encryption_key_version);
 }
 
 __END__

@@ -32,10 +32,13 @@ use Marlin
 
 sub BUILD ($self, $args) {
 
-  # build :memory: db
+  # Build :memory: db.
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
   $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
+
+  # Finish setting up root.
+  $self->root->owner->key_version($self->encryption_key_version);
 }
 
 __END__
