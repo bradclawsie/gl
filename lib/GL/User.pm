@@ -434,19 +434,22 @@ sub random ($class, $args) {
   my $pk = Crypt::PK::Ed25519->new->generate_key;
 
   # Random User just gets new ed25519 key pair by default.
-  return $class->new(
+  my $user = $class->new(
     display_name    => $args->{display_name} // random_v4uuid,
     ed25519_private => $pk->export_key_pem('private'),
     ed25519_public  => $pk->export_key_pem('public'),
     email           => $args->{email}          // random_v4uuid . '@local',
     id              => $args->{id}             // random_v4uuid,
-    key_version     => $args->{key_version}    // random_v4uuid,
     org             => $args->{org}            // random_v4uuid,
     password        => $args->{password}       // random_password,
     role            => $args->{role}           // $ROLE_TEST,
     schema_version  => $args->{schema_version} // $SCHEMA_VERSION,
     status          => $args->{status}         // $STATUS_ACTIVE,
   );
+
+  $user->key_version($args->{key_version}) if defined $args->{key_version};
+
+  return $user;
 }
 
 __END__

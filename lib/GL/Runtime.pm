@@ -62,6 +62,8 @@ use Marlin::Role
   isa     => CodeRef,
   lazy    => true,
   builder => sub ($self) {
+    croak 'encryption_key_version not set yet'
+      unless defined $self->encryption_key_version;
     my $encryption_keys = {
       $self->encryption_key_version => random_key,
       random_v4uuid()               => random_key,
