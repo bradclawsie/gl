@@ -54,6 +54,31 @@ subtest 'insert' => sub {
   done_testing;
 };
 
+subtest 'insert conflict name' => sub {
+  ok(
+    lives {
+      my $rt   = GL::Runtime::Test->new;
+      my $org0 = GL::Org->random;
+      $org0->owner->key_version($rt->encryption_key_version);
+      $org0->insert($rt->db, $rt->get_key);
+
+      my $caught = false;
+      try {
+        my $org = GL::Org->random(name => $org0->name);
+        $org->owner->key_version($rt->encryption_key_version);
+        $org->insert($rt->db, $rt->get_key);
+      }
+      catch ($e) {
+        like($e, qr/UNIQUE constraint failed: org.name/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 subtest 'read' => sub {
   ok(
     lives {
