@@ -76,7 +76,7 @@ signature_for read => (
 );
 
 sub read ($class, $db, $get_key, $id) {
-  my $query = 'select * from user where id = ?';
+  my $query = 'select * from org where id = ?';
   my $row   = $db->run(
     fixup => sub {
       return $_->selectrow_hashref($query, undef, $id);
