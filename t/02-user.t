@@ -164,9 +164,7 @@ subtest 'insert conflict email' => sub {
     lives {
       $user0 = GL::User->random(key_version => $rt->encryption_key_version)
         ->insert($rt->db, $rt->get_key);
-    },
 
-    lives {
       my $caught = false;
       try {
         my $user = GL::User->random(
