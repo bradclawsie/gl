@@ -7,7 +7,9 @@ use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( dies lives );
 use Types::UUID             qw( Uuid );
 
+use GL::Attribute     qw( $STATUS_INACTIVE );
 use GL::Org           ();
+use GL::User          ();
 use GL::Runtime::Test ();
 
 our $VERSION   = '0.01';
@@ -106,6 +108,104 @@ subtest 'read miss' => sub {
       }
       catch ($e) {
         like($e, qr/not found/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'update owner' => sub {
+  ok(
+    lives {
+      my $rt  = GL::Runtime::Test->new;
+      my $org = GL::Org->random;
+      $org->owner->key_version($rt->encryption_key_version);
+      $org->insert($rt->db, $rt->get_key);
+      my $user = GL::User->random(
+        key_version => $rt->encryption_key_version,
+        org         => $org->id,
+      );
+      $user->insert($rt->db, $rt->get_key);
+      $org->update_owner($rt->db, $rt->get_key, $user->id);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'update owner not in org' => sub {
+  ok(
+    lives {
+      my $rt  = GL::Runtime::Test->new;
+      my $org = GL::Org->random;
+      $org->owner->key_version($rt->encryption_key_version);
+      $org->insert($rt->db, $rt->get_key);
+
+      # Org is set to be random, so not $org->id.
+      my $user = GL::User->random(key_version => $rt->encryption_key_version);
+      $user->insert($rt->db, $rt->get_key);
+
+      my $caught = false;
+      try {
+        $org->update_owner($rt->db, $rt->get_key, $user->id);
+      }
+      catch ($e) {
+        like($e, qr/bad owner/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'update owner not active' => sub {
+  ok(
+    lives {
+      my $rt  = GL::Runtime::Test->new;
+      my $org = GL::Org->random;
+      $org->owner->key_version($rt->encryption_key_version);
+      $org->insert($rt->db, $rt->get_key);
+      my $user = GL::User->random(
+        key_version => $rt->encryption_key_version,
+        org         => $org->id,
+        status      => $STATUS_INACTIVE,
+      );
+      $user->insert($rt->db, $rt->get_key);
+
+      my $caught = false;
+      try {
+        $org->update_owner($rt->db, $rt->get_key, $user->id);
+      }
+      catch ($e) {
+        like($e, qr/bad owner/);
+        $caught = true;
+      }
+      ok($caught);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'update owner not found' => sub {
+  ok(
+    lives {
+      my $rt  = GL::Runtime::Test->new;
+      my $org = GL::Org->random;
+      $org->owner->key_version($rt->encryption_key_version);
+      $org->insert($rt->db, $rt->get_key);
+
+      my $caught = false;
+      try {
+        $org->update_owner($rt->db, $rt->get_key, random_v4uuid);
+      }
+      catch ($e) {
+        like($e, qr/bad owner/);
         $caught = true;
       }
       ok($caught);

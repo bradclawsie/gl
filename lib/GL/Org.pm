@@ -25,7 +25,7 @@ use Marlin
 
   'name!' => NonEmptyStr,
 
-  'owner!' => InstanceOf ['GL::User'];
+  'owner!==' => InstanceOf ['GL::User'];
 
 signature_for insert => (
   method     => true,
@@ -88,6 +88,50 @@ sub read ($class, $db, $get_key, $id) {
   $row->{owner} = GL::User->read($db, $get_key, $row->{owner});
 
   return $class->new($row);
+}
+
+signature_for update_owner => (
+  method     => true,
+  positional => [ DB, CodeRef, Uuid ],
+);
+
+sub update_owner ($self, $db, $get_key, $owner) {
+  my $status = $STATUS_ACTIVE;
+  my $query  = <<~"UPDATE_ORG";
+  update org
+  set owner = (select id from user
+               where id = ?
+               and org = ?
+               and status = $status)
+  where id = ?
+  returning mtime, signature
+  UPDATE_ORG
+
+  my $returning;
+  try {
+    $returning = $db->run(
+      fixup => sub {
+        my $sth = $_->prepare($query);
+        $sth->execute($owner, $self->id, $self->id);
+        my $updates = $sth->fetchrow_hashref;
+        return $updates if $sth->rows == 1;
+        return undef    if $sth->rows == 0;
+        croak 'rows affected > 1';
+      }
+    );
+  }
+  catch ($e) {
+    croak 'bad owner' if ($e =~ m/NOT\s+NULL\s+constraint\s+failed/xi);
+    croak $e;
+  }
+
+  croak 'no rows affected' unless defined $returning;
+
+  $self->mtime($returning->{mtime});
+  $self->signature($returning->{signature});
+  $self->owner(GL::User->read($db, $get_key, $owner));
+
+  return $self;
 }
 
 signature_for TO_JSON => (
