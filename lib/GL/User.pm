@@ -193,11 +193,11 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
 
   my $query = <<~'UPDATE_USER';
   update user set
-  display_name = $1,
-  ed25519_public = $2,
-  email = $3,
-  key_version = $4
-  where id = $5
+  display_name = ?,
+  ed25519_public = ?,
+  email = ?,
+  key_version = ?
+  where id = ?
   returning mtime, signature
   UPDATE_USER
 
