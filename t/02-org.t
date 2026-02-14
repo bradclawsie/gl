@@ -215,4 +215,44 @@ subtest 'update owner not found' => sub {
   done_testing;
 };
 
+subtest 'users' => sub {
+  ok(
+    lives {
+      my $rt  = GL::Runtime::Test->new;
+      my $org = GL::Org->random;
+      $org->owner->key_version($rt->encryption_key_version);
+      $org->insert($rt->db, $rt->get_key);
+
+      for (0 .. 9) {    # Ten users + one owner = eleven total.
+        my $user = GL::User->random(
+          key_version => $rt->encryption_key_version,
+          org         => $org->id,
+        );
+        $user->insert($rt->db, $rt->get_key);
+      }
+
+      my $limit             = 5;
+      my $last_insert_order = 0;
+      my %count_ids         = ();
+      my $count_calls       = 0;
+      while (true) {
+        my $batch = $org->users(
+          $rt->db,
+          limit             => $limit,
+          last_insert_order => $last_insert_order
+        );
+        is('ARRAY', ref($batch));
+        last unless (scalar @{$batch});
+        map { $count_ids{$_->{id}}++ } @{$batch};
+        $last_insert_order = $batch->[-1]->{insert_order};
+        $count_calls++;
+      }
+      is(3,  $count_calls);             # Two batches of five, one batch of one.
+      is(11, scalar keys %count_ids);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 done_testing;
