@@ -1330,20 +1330,20 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.006
-  Marlin-0.023000
-    pathname: T/TO/TOBYINK/Marlin-0.023000.tar.gz
+  Marlin-0.023001
+    pathname: T/TO/TOBYINK/Marlin-0.023001.tar.gz
     provides:
-      Marlin 0.023000
-      Marlin::Attribute 0.023000
+      Marlin 0.023001
+      Marlin::Attribute 0.023001
       Marlin::Attribute::NONE undef
-      Marlin::Attribute::SHVToolkit 0.023000
+      Marlin::Attribute::SHVToolkit 0.023001
       Marlin::Meta::Class undef
-      Marlin::Role 0.023000
-      Marlin::Struct 0.023000
-      Marlin::TypeConstraint 0.023000
-      Marlin::Util 0.023000
-      Marlin::X 0.023000
-      MooseX::Marlin 0.023000
+      Marlin::Role 0.023001
+      Marlin::Struct 0.023001
+      Marlin::TypeConstraint 0.023001
+      Marlin::Util 0.023001
+      Marlin::X 0.023001
+      MooseX::Marlin 0.023001
     requirements:
       B::Hooks::AtRuntime::OnlyCoreDependencies 0
       Class::Method::Modifiers 0
