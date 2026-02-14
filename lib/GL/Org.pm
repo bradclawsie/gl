@@ -134,6 +134,35 @@ sub update_owner ($self, $db, $get_key, $owner) {
   return $self;
 }
 
+signature_for users => (
+  method     => true,
+  positional => [ DB, Slurpy [ HashRef [Value] ] ],
+);
+
+sub users ($self, $db, $args) {
+  %{$args} = ((last_insert_order => 0, limit => 10), %{$args});
+
+  my $query = <<~'SELECT_ORG_USERS';
+  select id,
+  insert_order
+  from user
+  where org = ?
+  and insert_order > ?
+  order by insert_order asc
+  limit ?
+  SELECT_ORG_USERS
+
+  return $db->run(
+    fixup => sub {
+      return $_->selectall_arrayref(
+        $query, {Slice => {}},
+        $self->{id}, $args->{last_insert_order},
+        $args->{limit}
+      );
+    }
+  );
+}
+
 signature_for TO_JSON => (
   method     => true,
   positional => [],
