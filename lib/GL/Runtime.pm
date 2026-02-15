@@ -5,6 +5,7 @@ use Carp                  qw( croak );
 use Crypt::Misc           qw( random_v4uuid );
 use DBIx::Connector       ();
 use File::Spec            ();
+use Log::Dispatch         ();
 use Types::Standard       qw( ArrayRef CodeRef InstanceOf Str );
 use Types::UUID           qw( Uuid );
 use Types::Common::String qw( NonEmptyStr );
@@ -80,6 +81,14 @@ use Marlin::Role
   default => Uuid->generator,
   },
 
+  'logger' => {
+  isa     => InstanceOf ['Log::Dispatch'],
+  lazy    => true,
+  builder => sub ($self) {
+    return Log::Dispatch->new(outputs => $self->{log_outputs});
+  },
+  },
+
   'repository_base' => {
   isa     => Str,
   lazy    => true,
@@ -97,6 +106,6 @@ use Marlin::Role
   builder => Uuid->generator,
   },
 
-  -requires => [qw( dbi mode )];
+  -requires => [qw( dbi log_outputs mode )];
 
 __END__

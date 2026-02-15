@@ -1306,6 +1306,17 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Log-Dispatch-Array-1.005
+    pathname: R/RJ/RJBS/Log-Dispatch-Array-1.005.tar.gz
+    provides:
+      Log::Dispatch::Array 1.005
+    requirements:
+      ExtUtils::MakeMaker 6.78
+      Log::Dispatch::Output 0
+      parent 0
+      perl 5.012
+      strict 0
+      warnings 0
   Long-Jump-0.000003
     pathname: E/EX/EXODIST/Long-Jump-0.000003.tar.gz
     provides:

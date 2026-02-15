@@ -1,9 +1,11 @@
 package GL::Runtime::Test;
 use v5.42;
 use strictures 2;
-use Carp            qw( croak );
-use Path::Tiny      qw( path );
-use Types::Standard qw( ArrayRef Defined );
+use Carp                 qw( croak );
+use Log::Dispatch        ();
+use Log::Dispatch::Array ();
+use Path::Tiny           qw( path );
+use Types::Standard      qw( ArrayRef Defined );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -28,7 +30,14 @@ use Marlin
   }
   },
 
-  'mode!' => {constant => 'test',};
+  'log_outputs' => {
+  isa     => ArrayRef [Defined],
+  default => sub {
+    return [ [ 'Array', name => 'array', min_level => 'debug' ], ];
+  },
+  },
+
+  'mode!' => {constant => 'test'};
 
 sub BUILD ($self, $args) {
 

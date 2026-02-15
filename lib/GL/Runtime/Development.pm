@@ -30,6 +30,13 @@ use Marlin
   }
   },
 
+  'log_outputs!' => {
+  isa     => ArrayRef [Defined],
+  default => sub {
+    [ [ 'Screen', min_level => 'debug', stderr => 1 ], ]
+  },
+  },
+
   'mode!' => {constant => 'development'};
 
 sub BUILD ($self, $args) {
