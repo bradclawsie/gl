@@ -1,10 +1,11 @@
 package GL::Runtime::Development;
 use v5.42;
 use strictures 2;
-use Carp            qw( croak );
-use File::Basename  qw( dirname );
-use Path::Tiny      qw( path );
-use Types::Standard qw( ArrayRef Defined );
+use Carp                  qw( croak );
+use File::Basename        qw( dirname );
+use Log::Dispatch::Screen ();
+use Path::Tiny            qw( path );
+use Types::Standard       qw( ArrayRef Defined Object );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -30,10 +31,13 @@ use Marlin
   }
   },
 
-  'log_outputs!' => {
-  isa     => ArrayRef [Defined],
+  'dispatcher' => {
+  isa     => Object,
   default => sub {
-    [ [ 'Screen', min_level => 'debug', stderr => 1 ], ]
+    return Log::Dispatch::Screen->new(
+      name      => 'development',
+      min_level => 'debug'
+    );
   },
   },
 

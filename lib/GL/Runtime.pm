@@ -81,11 +81,13 @@ use Marlin::Role
   default => Uuid->generator,
   },
 
-  'logger' => {
+  'log' => {
   isa     => InstanceOf ['Log::Dispatch'],
   lazy    => true,
   builder => sub ($self) {
-    return Log::Dispatch->new(outputs => $self->{log_outputs});
+    my $ld = Log::Dispatch->new;
+    $ld->add($self->dispatcher);
+    return $ld;
   },
   },
 
@@ -106,6 +108,6 @@ use Marlin::Role
   builder => Uuid->generator,
   },
 
-  -requires => [qw( dbi log_outputs mode )];
+  -requires => [qw( dbi dispatcher mode )];
 
 __END__

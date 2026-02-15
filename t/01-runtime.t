@@ -72,6 +72,19 @@ subtest 'get_key' => sub {
   done_testing;
 };
 
+subtest 'logger' => sub {
+  my $rt = GL::Runtime::Test->new;
+
+  ok(
+    lives {
+      $rt->log->debug('0');
+      is($rt->dispatcher->array, [ {message => '0', level => 'debug'} ]);
+    },
+  ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
 done_testing;
 
 __END__
