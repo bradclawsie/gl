@@ -23,8 +23,7 @@ load $rt_pkg;
 my $rt = $rt_pkg->new;
 
 my $default_app = sub {
-  return [ 404, [ 'Content-Type', 'application/json' ],
-    ['{"error":"not found"}'] ];
+  return [ 404, [ 'Content-Type', 'text/plain' ], ['not found'] ];
 };
 
 builder {
