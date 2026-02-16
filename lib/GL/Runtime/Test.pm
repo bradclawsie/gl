@@ -4,7 +4,6 @@ use strictures 2;
 use Carp                 qw( croak );
 use Log::Dispatch::Array ();
 use Path::Tiny           qw( path );
-use Time::Piece          qw( localtime );
 use Types::Standard      qw( ArrayRef Defined Object );
 
 use GL::LogLine;
@@ -38,27 +37,7 @@ use Marlin
     return Log::Dispatch::Array->new(
       name      => 'test',
       min_level => 'debug',
-      callbacks => sub (%args) {
-        my $t       = localtime;
-        my $date    = $t->strftime(GL::LogLine->date_format);
-        my $level   = $args{level};
-        my $message = $args{message};
-
-        my ($file, $line);
-        my $depth = 0;
-        while (my @frame = caller($depth)) {
-          if ($frame[0] !~ /^Log::Dispatch/x) {
-            $file = $frame[1];
-            $line = $frame[2];
-            last;
-          }
-          $depth++;
-        }
-        $file //= 'unknown';
-        $line //= 0;
-
-        return "[${date}] [${level}] ${message} (${file}:${line})";
-      },
+      callbacks => GL::LogLine->logdispatch_callback,
     );
   },
   },
