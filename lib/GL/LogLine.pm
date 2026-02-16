@@ -2,7 +2,7 @@ package GL::LogLine;
 use v5.42;
 use strictures 2;
 use Carp                   qw( croak );
-use Time::Piece            ();
+use Time::Piece            qw( localtime );
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
 use Types::Standard        qw( ClassName InstanceOf Str );
@@ -15,6 +15,35 @@ use Marlin
   qw(level message file) => Str,
   line                   => PositiveInt,
   date_format            => {constant => '%Y%m%d %H:%M:%S %z'};
+
+signature_for logdispatch_callback => (
+  method     => false,
+  positional => [ClassName],
+);
+
+sub logdispatch_callback ($class) {
+  return sub (%args) {
+    my $t       = localtime;
+    my $date    = $t->strftime($class->date_format);
+    my $level   = $args{level};
+    my $message = $args{message};
+
+    my ($file, $line);
+    my $depth = 0;
+    while (my @frame = caller($depth)) {
+      if ($frame[0] !~ /^Log::Dispatch/x) {
+        $file = $frame[1];
+        $line = $frame[2];
+        last;
+      }
+      $depth++;
+    }
+    $file //= 'unknown';
+    $line //= 0;
+
+    return "[${date}] [${level}] ${message} (${file}:${line})";
+  };
+}
 
 signature_for parse => (
   method     => false,

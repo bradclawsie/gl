@@ -14,7 +14,6 @@ requires 'JSON::MaybeXS';
 requires 'List::Util';
 requires 'Log::Dispatch';
 requires 'Log::Dispatch::Array';
-requires 'Log::Dispatch::Config';
 requires 'multidimensional';
 requires 'Marlin';
 requires 'Math::Random::ISAAC';

@@ -4,7 +4,9 @@ use strictures 2;
 use Carp                 qw( croak );
 use Log::Dispatch::Array ();
 use Path::Tiny           qw( path );
-use Types::Standard      qw( ArrayRef Defined );
+use Types::Standard      qw( ArrayRef Defined Object );
+
+use GL::LogLine;
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -29,7 +31,16 @@ use Marlin
   }
   },
 
-  'dispatcher_conf_file!' => {constant => 'test.conf'},
+  'dispatcher!' => {
+  isa     => Object,
+  default => sub {
+    return Log::Dispatch::Array->new(
+      name      => 'test',
+      min_level => 'debug',
+      callbacks => GL::LogLine->logdispatch_callback,
+    );
+  },
+  },
 
   'mode!' => {constant => 'test'};
 

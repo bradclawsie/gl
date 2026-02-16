@@ -5,7 +5,9 @@ use Carp                  qw( croak );
 use File::Basename        qw( dirname );
 use Log::Dispatch::Screen ();
 use Path::Tiny            qw( path );
-use Types::Standard       qw( ArrayRef Defined );
+use Types::Standard       qw( ArrayRef Defined Object );
+
+use GL::LogLine ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -31,7 +33,16 @@ use Marlin
   }
   },
 
-  'dispatcher_conf_file!' => {constant => 'development.conf'},
+  'dispatcher!' => {
+  isa     => Object,
+  default => sub {
+    return Log::Dispatch::Screen->new(
+      name      => 'development',
+      min_level => 'debug',
+      callbacks => GL::LogLine->logdispatch_callback,
+    );
+  },
+  },
 
   'mode!' => {constant => 'development'};
 

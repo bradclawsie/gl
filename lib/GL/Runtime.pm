@@ -6,7 +6,6 @@ use Crypt::Misc           qw( random_v4uuid );
 use DBIx::Connector       ();
 use File::Spec            ();
 use Log::Dispatch         ();
-use Log::Dispatch::Config ();
 use Types::Standard       qw( ArrayRef CodeRef InstanceOf Str );
 use Types::UUID           qw( Uuid );
 use Types::Common::String qw( NonEmptyStr );
@@ -86,11 +85,9 @@ use Marlin::Role
   isa     => InstanceOf ['Log::Dispatch'],
   lazy    => true,
   builder => sub ($self) {
-    my $dispatch_conf = $ENV{DISPATCH_CONF} || croak 'DISPATCH_CONF not set';
-    croak "$dispatch_conf: dir not found" unless -d $dispatch_conf;
-    my $conf = File::Spec->catfile($dispatch_conf, $self->dispatcher_conf_file);
-    Log::Dispatch::Config->configure($conf);
-    return Log::Dispatch::Config->instance;
+    my $ld = Log::Dispatch->new;
+    $ld->add($self->dispatcher);
+    return $ld;
   },
   },
 
@@ -111,6 +108,6 @@ use Marlin::Role
   builder => Uuid->generator,
   },
 
-  -requires => [qw( dbi dispatcher_conf_file mode )];
+  -requires => [qw( dbi dispatcher mode )];
 
 __END__
