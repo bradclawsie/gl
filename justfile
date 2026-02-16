@@ -11,8 +11,6 @@ YATH := 'yath'
 DB_FILE := PWD / "db" / "dev.db"
 SCHEMA := PWD / "sql" / "schema.sql"
 LOCAL_BIN := PWD / "local" / "bin"
-CONF_PATH := PWD / "conf"
-export DISPATCH_CONF := CONF_PATH / "logdispatch"
 export PATH := LOCAL_BIN + ":" + env("PATH")
 export PERL5LIB := PERL5LIB_LIB
 
