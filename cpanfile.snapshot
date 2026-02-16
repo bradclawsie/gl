@@ -69,6 +69,20 @@ DISTRIBUTIONS
       strict 0
       utf8 0
       warnings 0
+  AppConfig-1.71
+    pathname: N/NE/NEILB/AppConfig-1.71.tar.gz
+    provides:
+      AppConfig 1.71
+      AppConfig::Args 1.71
+      AppConfig::CGI 1.71
+      AppConfig::File 1.71
+      AppConfig::Getopt 1.71
+      AppConfig::State 1.71
+      AppConfig::Sys 1.71
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::More 0
+      perl 5.008008
   B-Hooks-AtRuntime-OnlyCoreDependencies-8.000001
     pathname: T/TO/TOBYINK/B-Hooks-AtRuntime-OnlyCoreDependencies-8.000001.tar.gz
     provides:
@@ -1145,6 +1159,30 @@ DISTRIBUTIONS
       Exporter 5.57
       ExtUtils::MakeMaker 0
       perl 5.008
+  IO-Stringy-2.113
+    pathname: C/CA/CAPOEIRAB/IO-Stringy-2.113.tar.gz
+    provides:
+      IO::AtomicFile 2.113
+      IO::InnerFile 2.113
+      IO::Lines 2.113
+      IO::Scalar 2.113
+      IO::ScalarArray 2.113
+      IO::Stringy 2.113
+      IO::Wrap 2.113
+      IO::WrapTie 2.113
+    requirements:
+      Carp 0
+      Exporter 5.57
+      ExtUtils::MakeMaker 0
+      File::Spec 0
+      FileHandle 0
+      IO::File 0
+      IO::Handle 0
+      Symbol 0
+      overload 0
+      parent 0
+      strict 0
+      warnings 0
   IPC-Run3-0.049
     pathname: R/RJ/RJBS/IPC-Run3-0.049.tar.gz
     provides:
@@ -1317,6 +1355,19 @@ DISTRIBUTIONS
       perl 5.012
       strict 0
       warnings 0
+  Log-Dispatch-Config-1.04
+    pathname: M/MI/MIYAGAWA/Log-Dispatch-Config-1.04.tar.gz
+    provides:
+      Log::Dispatch::Config 1.04
+      Log::Dispatch::Configurator 1.00
+      Log::Dispatch::Configurator::AppConfig 1.00
+    requirements:
+      AppConfig 1.52
+      ExtUtils::MakeMaker 0
+      File::Temp 0.12
+      IO::Scalar 0
+      Log::Dispatch 2
+      Test::More 0.32
   Long-Jump-0.000003
     pathname: E/EX/EXODIST/Long-Jump-0.000003.tar.gz
     provides:

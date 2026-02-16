@@ -10,7 +10,7 @@
 # preserve_unused disabled.
 
 cache                           = false # setting this to true is currently discouraged
-ignore_modules                  = ["Log::Dispatch::Array", "Log::Dispatch::Screen", "Type::Library", "Type::Tiny"]
+ignore_modules                  = ["Log::Dispatch", "Log::Dispatch::Array", "Log::Dispatch::Config", "Log::Dispatch::Screen", "Type::Library", "Type::Tiny"]
 ignore_modules_filename         = ""
 ignore_modules_pattern          = "^Marlin*" # regex like "^(Foo|Foo::Bar)"
 ignore_modules_pattern_filename = ""

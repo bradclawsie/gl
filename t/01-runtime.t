@@ -77,8 +77,13 @@ subtest 'logger' => sub {
 
   ok(
     lives {
-      $rt->log->debug('0');
-      is($rt->dispatcher->array, [ {message => '0', level => 'debug'} ]);
+      my $s = '0';
+      $rt->log->debug($s);
+      is(1, scalar @{$rt->log->output('test')->array});
+      use JSON::MaybeXS;
+      my $fields =
+        decode_json($rt->log->output('test')->array->[-1]->{message});
+      is($s, $fields->{message});
     },
   ) or note($EVAL_ERROR);
 
