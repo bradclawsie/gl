@@ -44,4 +44,4 @@ allowed_values = -10000..100000
 [Variables::ProhibitPackageVars]
 add_packages = DBI Email::Address
 [Variables::ProhibitPunctuationVars]
-allow = $@ $! ${^CAPTURE}
+allow = $@ $! ${^CAPTURE} %{^CAPTURE} @{^CAPTURE}
