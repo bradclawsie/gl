@@ -20,6 +20,7 @@ requires 'Math::Random::ISAAC';
 requires 'Path::Tiny';
 requires 'Plack';
 requires 'Plack::Middleware::LogDispatch';
+requires 'Plack::Middleware::RequestId';
 requires 'Perl::Critic';
 requires 'Perl::Critic::Bangs';
 requires 'Perl::Critic::Community';

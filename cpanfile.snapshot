@@ -253,6 +253,12 @@ DISTRIBUTIONS
       parent 0.223
       perl 5.008005
       version 0.77
+  Class-Accessor-Lite-0.08
+    pathname: K/KA/KAZUHO/Class-Accessor-Lite-0.08.tar.gz
+    provides:
+      Class::Accessor::Lite 0.08
+    requirements:
+      ExtUtils::MakeMaker 6.36
   Class-Data-Inheritable-0.10
     pathname: R/RS/RSHERER/Class-Data-Inheritable-0.10.tar.gz
     provides:
@@ -1528,6 +1534,43 @@ DISTRIBUTIONS
       Text::ParseWords 0
       perl 5.006001
       version 0.87
+  Module-Build-Pluggable-0.10
+    pathname: T/TO/TOKUHIROM/Module-Build-Pluggable-0.10.tar.gz
+    provides:
+      Module::Build::Pluggable 0.10
+      Module::Build::Pluggable::Base undef
+      Module::Build::Pluggable::GithubMeta undef
+      Module::Build::Pluggable::Repository 0.10
+      Module::Build::Pluggable::Util undef
+      Test::Module::Build::Pluggable undef
+    requirements:
+      CPAN::Meta 0
+      CPAN::Meta::Prereqs 0
+      Class::Accessor::Lite 0
+      Class::Method::Modifiers 0
+      Data::OptList 0
+      File::Basename 0
+      File::Path 0
+      File::Temp 0
+      Module::Build 0.38
+      Module::Load 0
+      Test::SharedFork 0
+      parent 0
+      perl 5.008001
+  Module-Build-Pluggable-CPANfile-0.05
+    pathname: K/KA/KAZEBURO/Module-Build-Pluggable-CPANfile-0.05.tar.gz
+    provides:
+      Module::Build::Pluggable::CPANfile 0.05
+    requirements:
+      CPAN::Meta 0
+      CPAN::Meta::Prereqs 0
+      List::Util 1.14
+      Module::Build 0.38
+      Module::Build::Pluggable 0.05
+      Module::CPANfile 0.9010
+      parent 0
+      perl 5.008005
+      version 0.99
   Module-Build-Tiny-0.052
     pathname: L/LE/LEONT/Module-Build-Tiny-0.052.tar.gz
     provides:
@@ -2573,6 +2616,21 @@ DISTRIBUTIONS
       WWW::Form::UrlEncoded 0.23
       parent 0
       perl 5.012000
+  Plack-Middleware-RequestId-0.07
+    pathname: B/BA/BAYASHI/Plack-Middleware-RequestId-0.07.tar.gz
+    provides:
+      Plack::Middleware::RequestId 0.07
+    requirements:
+      Data::UUID 0
+      Module::Build 0.40
+      Module::Build::Pluggable 0
+      Module::Build::Pluggable::CPANfile 0.05
+      Plack::Middleware 0
+      Plack::Util 0
+      Plack::Util::Accessor 0
+      perl 5.008005
+      strict 0
+      warnings 0
   Pod-Parser-1.67
     pathname: M/MA/MAREKR/Pod-Parser-1.67.tar.gz
     provides:
