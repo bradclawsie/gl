@@ -5,6 +5,7 @@ use Carp                   qw( croak );
 use Time::Piece            qw( localtime );
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
+use Types::Common::String  qw( NonEmptyStr );
 use Types::Standard        qw( ClassName InstanceOf Str );
 
 our $VERSION   = '0.0.1';
@@ -12,7 +13,7 @@ our $AUTHORITY = 'cpan:bclawsie';
 
 use Marlin
   date                   => InstanceOf ['Time::Piece'],
-  qw(level message file) => Str,
+  qw(level message file) => NonEmptyStr,
   line                   => PositiveInt,
   date_format            => {constant => '%Y%m%d %H:%M:%S %z'};
 

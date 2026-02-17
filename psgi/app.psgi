@@ -2,8 +2,9 @@
 use v5.42;
 use strictures 2;
 use Carp           qw( croak );
+use Crypt::Misc    qw( random_v4uuid );
 use Module::Load   qw( load );
-use Plack::Builder qw( builder mount );
+use Plack::Builder qw( builder enable mount );
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -27,6 +28,9 @@ my $default_app = sub {
 };
 
 builder {
+  enable 'LogDispatch', logger       => $rt->log;
+  enable 'RequestId',   id_generator => sub { random_v4uuid };
+
   # api.psgi will have the Module::Load stuff as it requires a runtime
   # mount '/api' => Plack::Util::load_psgi('./api.psgi');
   #
