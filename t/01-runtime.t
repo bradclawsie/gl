@@ -5,6 +5,7 @@ use English                 qw(-no_match_vars);
 use Test2::V0               qw( done_testing is note ok subtest );
 use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
+use Time::Piece             qw( localtime );
 
 use GL::Runtime::Test        ();
 use GL::Runtime::Development ();
@@ -82,6 +83,16 @@ subtest 'logger' => sub {
       is(1, scalar @{$rt->log->output('test')->array});
     },
   ) or note($EVAL_ERROR);
+
+  done_testing;
+};
+
+subtest 'started_at' => sub {
+  my $rt = GL::Runtime::Test->new;
+
+  my $now  = localtime;
+  my $diff = $now - $rt->started_at;
+  ok($diff->seconds >= 0);
 
   done_testing;
 };

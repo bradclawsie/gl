@@ -6,6 +6,7 @@ use Crypt::Misc           qw( random_v4uuid );
 use DBIx::Connector       ();
 use File::Spec            ();
 use Log::Dispatch         ();
+use Time::Piece           qw( localtime );
 use Types::Standard       qw( ArrayRef CodeRef InstanceOf Str );
 use Types::UUID           qw( Uuid );
 use Types::Common::String qw( NonEmptyStr );
@@ -106,6 +107,11 @@ use Marlin::Role
   isa     => Uuid,
   lazy    => true,
   builder => Uuid->generator,
+  },
+
+  'started_at!' => {
+  isa     => InstanceOf ['Time::Piece'],
+  default => sub { localtime },
   },
 
   -requires => [qw( dbi dispatcher mode )];
