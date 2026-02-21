@@ -16,17 +16,16 @@ subtest 'test db' => sub {
 
   ok(
     lives {
-      is('test', $rt->mode);
+      is('test', $rt->mode, 'mode is test');
       my $c = $rt->db->run(
         ping => sub {
           $_->selectrow_array('select count(*) from user');
         }
       );
-      is(0, $c);
+      is(0, $c, 'table is empty');
     },
+    'runtime lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'development db' => sub {
@@ -34,17 +33,16 @@ subtest 'development db' => sub {
 
   ok(
     lives {
-      is('development', $rt->mode);
+      is('development', $rt->mode, 'mode is development');
       my $c = $rt->db->run(
         ping => sub {
           $_->selectrow_array('select count(*) from user');
         }
       );
-      like($c, qr/^\d+$/);
+      like($c, qr/^\d+$/, 'table has rows');
     },
+    'runtime lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'get_key' => sub {
@@ -54,6 +52,7 @@ subtest 'get_key' => sub {
     lives {
       Key->check($rt->get_key->($rt->encryption_key_version));
     },
+    'get_key lives'
   ) or note($EVAL_ERROR);
 
   ok(
@@ -63,14 +62,13 @@ subtest 'get_key' => sub {
         $rt->get_key->(random_v4uuid);
       }
       catch ($e) {
-        like($e, qr/bad key_version/);
+        like($e, qr/bad key_version/, 'matched bad key exception');
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught bad key exception');
     },
+    'get_key lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'logger' => sub {
@@ -80,11 +78,10 @@ subtest 'logger' => sub {
     lives {
       my $s = '0';
       $rt->log->debug($s);
-      is(1, scalar @{$rt->log->output('test')->array});
+      is(1, scalar @{$rt->log->output('test')->array}, 'single log line');
     },
+    'logger lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'started_at' => sub {
@@ -92,9 +89,7 @@ subtest 'started_at' => sub {
 
   my $now  = localtime;
   my $diff = $now - $rt->started_at;
-  ok($diff->seconds >= 0);
-
-  done_testing;
+  ok($diff->seconds >= 0, 'positive time diff');
 };
 
 done_testing;
