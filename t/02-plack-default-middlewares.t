@@ -21,8 +21,12 @@ subtest 'default middlewares' => sub {
       my $rt = GL::Runtime::Test->new;
 
       my $handler = sub ($env) {
-        my $request_id = $env->{'psgix.request_id'};
-        $rt->log->debug($request_id);
+        $env->{'psgix.logger'}->(
+          {
+            level   => 'debug',
+            message => $env->{'psgix.request_id'}
+          }
+        );
         return [ 200, [ 'Content-Type' => 'text/plain' ], ['ok'] ];
       };
 
@@ -37,12 +41,10 @@ subtest 'default middlewares' => sub {
 
       is('ok', $res->content, 'match content');
       ok(is_v4uuid($res->header('X-Request-Id')), 'request id is uuid');
-      my $logline = $rt->log->output('test')->array->[-1];
-      is(
-        $res->header('X-Request-Id'),
-        GL::LogLine->parse($logline->{message})->message,
-        'match request id'
-      );
+      my $log_raw = $rt->log->output('test')->array->[-1];
+      my $logline = GL::LogLine->parse($log_raw->{message});
+      is('debug',                      $logline->level,   'match level');
+      is($res->header('X-Request-Id'), $logline->message, 'match request id');
     },
     'default middlewares lives'
   ) or note($EVAL_ERROR);
