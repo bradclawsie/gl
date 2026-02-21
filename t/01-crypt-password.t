@@ -16,12 +16,11 @@ subtest 'password' => sub {
     lives {
       $password = text_to_password($text);
     },
+    'text to password lives'
   ) or note($EVAL_ERROR);
 
   is(verify_password($password, $text), true, 'match password');
   isnt(verify_password($password, 'guess'), true, 'mismatch password');
-
-  done_testing;
 };
 
 done_testing;
