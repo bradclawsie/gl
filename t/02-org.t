@@ -90,7 +90,7 @@ subtest 'read' => sub {
 
       my $read_org = GL::Org->read($rt->db, $rt->get_key, $org->id);
       $org->owner->clear_ed25519_private;
-      is($read_org, $org, 'org name matches');
+      is($read_org, $org, 'read org');
     },
     'read lives'
   ) or note($EVAL_ERROR);
@@ -110,6 +110,7 @@ subtest 'read miss' => sub {
       }
       ok($caught, 'caught not found exception');
     },
+    'read miss lives'
   ) or note($EVAL_ERROR);
 };
 
