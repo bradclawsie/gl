@@ -17,9 +17,8 @@ subtest 'logline' => sub {
       my $logline = $rt->log->output('test')->array->[-1];
       GL::LogLine->parse($logline->{message});
     },
+    'logline lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 done_testing;
