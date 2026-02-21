@@ -35,15 +35,19 @@ subtest 'default middlewares' => sub {
       my $test = Plack::Test->create($app);
       my $res  = $test->request(GET "/");
 
-      is('ok', $res->content);
-      ok(is_v4uuid($res->header('X-Request-Id')));
+      is('ok', $res->content, 'match content');
+      ok(is_v4uuid($res->header('X-Request-Id')), 'request id is uuid');
       my $logline = $rt->log->output('test')->array->[-1];
-      is($res->header('X-Request-Id'),
-        GL::LogLine->parse($logline->{message})->message);
+      is(
+        $res->header('X-Request-Id'),
+        GL::LogLine->parse($logline->{message})->message,
+        'match request id'
+      );
     },
+    'default middlewares lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 done_testing;
+
+__END__

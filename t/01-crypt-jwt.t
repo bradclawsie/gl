@@ -21,18 +21,23 @@ subtest 'encode decode' => sub {
         sub => random_v4uuid,
       );
       my $signing_key = random_v4uuid;
-      is($jwt,
-        GL::Crypt::JWT->decode($jwt->encode($signing_key), $signing_key));
+
+      is(
+        $jwt,
+        GL::Crypt::JWT->decode($jwt->encode($signing_key), $signing_key),
+        'jwt round trip'
+      );
+
       is(
         $jwt,
         GL::Crypt::JWT->from_header(
           $jwt->to_header($signing_key), $signing_key
-        )
+        ),
+        'jwt round trip from header'
       );
     },
+    'jwt lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'bad exp' => sub {
@@ -47,9 +52,8 @@ subtest 'bad exp' => sub {
         sub => random_v4uuid,
       );
     },
+    'jwt dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'bad id' => sub {
@@ -64,9 +68,8 @@ subtest 'bad id' => sub {
         sub => random_v4uuid,
       );
     },
+    'bad id dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'bad iss' => sub {
@@ -81,9 +84,8 @@ subtest 'bad iss' => sub {
         sub => random_v4uuid,
       );
     },
+    'bad iss dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'bad nbf' => sub {
@@ -98,9 +100,8 @@ subtest 'bad nbf' => sub {
         sub => random_v4uuid,
       );
     },
+    'bad nbf dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'bad sub' => sub {
@@ -115,9 +116,10 @@ subtest 'bad sub' => sub {
         sub => q{},
       );
     },
+    'bad sub dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 done_testing;
+
+__END__

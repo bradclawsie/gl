@@ -20,22 +20,19 @@ subtest 'valid Org' => sub {
     lives {
       GL::Org->random;
       my $id = random_v4uuid;
-      is($id, GL::Org->random(id => $id)->id);
+      is($id, GL::Org->random(id => $id)->id, 'match id');
     },
+    'Org lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'invalid attr mutations' => sub {
-
   ok(
     dies {
       GL::Org->random->name(q{});
     },
+    'name mutation dies'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'insert' => sub {
@@ -46,14 +43,13 @@ subtest 'insert' => sub {
       my $org = GL::Org->random;
       $org->owner->key_version($rt->encryption_key_version);
       $org->insert($rt->db, $rt->get_key);
-      ok($org->ctime >= $now);
-      ok($org->mtime >= $now);
-      is(1, $org->insert_order);
-      ok(Uuid->check($org->signature));
+      ok($org->ctime >= $now, 'valid ctime');
+      ok($org->mtime >= $now, 'valid mtime');
+      is(1, $org->insert_order, 'insert_order match');
+      ok(Uuid->check($org->signature), 'signature is Uuid');
     },
+    'insert lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'insert conflict name' => sub {
@@ -71,14 +67,17 @@ subtest 'insert conflict name' => sub {
         $org->insert($rt->db, $rt->get_key);
       }
       catch ($e) {
-        like($e, qr/UNIQUE constraint failed: org.name/);
+        like(
+          $e,
+          qr/UNIQUE constraint failed: org.name/,
+          'matched constraint exception'
+        );
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught insert exception');
     },
+    'insert constraint lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'read' => sub {
@@ -91,11 +90,10 @@ subtest 'read' => sub {
 
       my $read_org = GL::Org->read($rt->db, $rt->get_key, $org->id);
       $org->owner->clear_ed25519_private;
-      is($read_org, $org);
+      is($read_org, $org, 'read org');
     },
+    'read lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'read miss' => sub {
@@ -107,14 +105,13 @@ subtest 'read miss' => sub {
         GL::Org->read($rt->db, $rt->get_key, random_v4uuid);
       }
       catch ($e) {
-        like($e, qr/not found/);
+        like($e, qr/not found/, 'matched not found exception');
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught not found exception');
     },
+    'read miss lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'update owner' => sub {
@@ -131,9 +128,8 @@ subtest 'update owner' => sub {
       $user->insert($rt->db, $rt->get_key);
       $org->update_owner($rt->db, $rt->get_key, $user->id);
     },
+    'update owner lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'update owner not in org' => sub {
@@ -153,14 +149,13 @@ subtest 'update owner not in org' => sub {
         $org->update_owner($rt->db, $rt->get_key, $user->id);
       }
       catch ($e) {
-        like($e, qr/bad owner/);
+        like($e, qr/bad owner/, 'matched bad owner exception');
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught bad owner exception');
     },
+    'update bad owner lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'update owner not active' => sub {
@@ -182,14 +177,13 @@ subtest 'update owner not active' => sub {
         $org->update_owner($rt->db, $rt->get_key, $user->id);
       }
       catch ($e) {
-        like($e, qr/bad owner/);
+        like($e, qr/bad owner/, 'matched bad owner exception');
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught bad owner exception');
     },
+    'update bad owner lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'update owner not found' => sub {
@@ -205,14 +199,13 @@ subtest 'update owner not found' => sub {
         $org->update_owner($rt->db, $rt->get_key, random_v4uuid);
       }
       catch ($e) {
-        like($e, qr/bad owner/);
+        like($e, qr/bad owner/, 'matched bad owner exception');
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught bad owner exception');
     },
+    'update bad owner lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 subtest 'users' => sub {
@@ -221,7 +214,7 @@ subtest 'users' => sub {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random;
       $org->owner->key_version($rt->encryption_key_version);
-      $org->insert($rt->db, $rt->get_key);
+      $org->insert($rt->db, $rt->get_key);    # Has one owner user already.
 
       for (0 .. 9) {    # Ten users + one owner = eleven total.
         my $user = GL::User->random(
@@ -241,18 +234,19 @@ subtest 'users' => sub {
           limit             => $limit,
           last_insert_order => $last_insert_order
         );
-        is('ARRAY', ref($batch));
+        is('ARRAY', ref($batch), 'users retval is array ref');
         last unless (scalar @{$batch});
         map { $count_ids{$_->{id}}++ } @{$batch};
         $last_insert_order = $batch->[-1]->{insert_order};
         $count_calls++;
       }
-      is(3,  $count_calls);             # Two batches of five, one batch of one.
-      is(11, scalar keys %count_ids);
+      is(3,  $count_calls,           'three users calls');
+      is(11, scalar keys %count_ids, 'eleven users total');
     },
+    'users lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 done_testing;
+
+__END__

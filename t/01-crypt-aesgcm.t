@@ -21,6 +21,7 @@ subtest 'encrypt decrypt' => sub {
     lives {
       $encrypted = encrypt($s, $key, $iv);
     },
+    'encrypt lives'
   ) or note($EVAL_ERROR);
 
   my $text;
@@ -29,11 +30,10 @@ subtest 'encrypt decrypt' => sub {
     lives {
       $text = decrypt($encrypted, $key);
     },
+    'decrypt lives'
   ) or note($EVAL_ERROR);
 
-  is($text, $s);
-
-  done_testing;
+  is($text, $s, 'text matches');
 };
 
 subtest 'different key' => sub {
@@ -41,6 +41,7 @@ subtest 'different key' => sub {
     lives {
       $encrypted = encrypt($s, random_key, $iv);
     },
+    'encrypt lives'
   ) or note($EVAL_ERROR);
 
   ok(
@@ -53,12 +54,12 @@ subtest 'different key' => sub {
         like($e, qr/^bad decrypt/);
         $caught = true;
       }
-      ok($caught);
+      ok($caught, 'caught decrypt exception');
     },
+    'decrypt lives'
   ) or note($EVAL_ERROR);
-
-  done_testing;
 };
 
 done_testing;
 
+__END__
