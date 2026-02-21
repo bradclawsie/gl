@@ -23,13 +23,15 @@ subtest 'IV' => sub {
     lives {
       assert_IV(random_iv);
     },
-  'IV lives') or note($EVAL_ERROR);
+    'IV lives'
+  ) or note($EVAL_ERROR);
 
   ok(
     dies {
       assert_IV(q{});
     },
-  'IV dies') or note($EVAL_ERROR);
+    'IV dies'
+  ) or note($EVAL_ERROR);
 };
 
 subtest 'Key' => sub {
@@ -37,13 +39,15 @@ subtest 'Key' => sub {
     lives {
       assert_Key(random_key);
     },
-  'Key lives') or note($EVAL_ERROR);
+    'Key lives'
+  ) or note($EVAL_ERROR);
 
   ok(
     dies {
       assert_Key(q{});
     },
-  'Key dies') or note($EVAL_ERROR);
+    'Key dies'
+  ) or note($EVAL_ERROR);
 };
 
 subtest 'Role' => sub {
@@ -53,13 +57,15 @@ subtest 'Role' => sub {
       assert_Role($ROLE_ADMIN);
       assert_Role($ROLE_TEST);
     },
-  'Role lives') or note($EVAL_ERROR);
+    'Role lives'
+  ) or note($EVAL_ERROR);
 
   ok(
     dies {
       assert_Role(0);
     },
-  'Role dies') or note($EVAL_ERROR);
+    'Role dies'
+  ) or note($EVAL_ERROR);
 };
 
 subtest 'Status' => sub {
@@ -69,13 +75,15 @@ subtest 'Status' => sub {
       assert_Status($STATUS_ACTIVE);
       assert_Status($STATUS_INACTIVE);
     },
-  'Status lives') or note($EVAL_ERROR);
+    'Status lives'
+  ) or note($EVAL_ERROR);
 
   ok(
     dies {
       assert_Status(0);
     },
-  'Status dies') or note($EVAL_ERROR);
+    'Status dies'
+  ) or note($EVAL_ERROR);
 };
 
 done_testing;
