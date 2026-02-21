@@ -121,3 +121,5 @@ subtest 'bad sub' => sub {
 };
 
 done_testing;
+
+__END__

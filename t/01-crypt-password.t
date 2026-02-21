@@ -25,3 +25,4 @@ subtest 'password' => sub {
 
 done_testing;
 
+__END__
