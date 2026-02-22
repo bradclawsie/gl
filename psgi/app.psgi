@@ -28,8 +28,14 @@ my $default_app = sub {
 };
 
 builder {
-  enable 'LogDispatch', logger       => $rt->log;
-  enable 'RequestId',   id_generator => sub { random_v4uuid };
+  # Add runtime to $env.
+  enable sub ($app) {
+    return sub ($env) {
+      $env->{'rt'} = $rt;
+      return $app->($env);
+    };
+  };
+  enable 'RequestId', id_generator => sub { random_v4uuid };
 
   # api.psgi will have the Module::Load stuff as it requires a runtime
   # mount '/api' => Plack::Util::load_psgi('./api.psgi');

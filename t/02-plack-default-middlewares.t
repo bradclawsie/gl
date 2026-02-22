@@ -21,18 +21,20 @@ subtest 'default middlewares' => sub {
       my $rt = GL::Runtime::Test->new;
 
       my $handler = sub ($env) {
-        $env->{'psgix.logger'}->(
-          {
-            level   => 'debug',
-            message => $env->{'psgix.request_id'}
-          }
-        );
+        $env->{'rt'}->log->debug($env->{'psgix.request_id'});
         return [ 200, [ 'Content-Type' => 'text/plain' ], ['ok'] ];
       };
 
       my $app = builder {
-        enable 'LogDispatch', logger       => $rt->log;
-        enable 'RequestId',   id_generator => sub { random_v4uuid };
+
+        # Add runtime to $env.
+        enable sub ($app) {
+          return sub ($env) {
+            $env->{'rt'} = $rt;
+            return $app->($env);
+          };
+        };
+        enable 'RequestId', id_generator => sub { random_v4uuid };
         $handler;
       };
 
