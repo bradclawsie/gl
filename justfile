@@ -1,6 +1,7 @@
 set shell := ["bash", "-c"]
 
 PWD := justfile_directory()
+
 PERL5LIB_BASE := PWD / "local" / "lib" / "perl5"
 PERL5LIB_LIB := PERL5LIB_BASE + ":" + PWD / "lib"
 PERLCRITIC := "perlcritic" + " --profile " + PWD / ".perlcritic"
@@ -8,11 +9,14 @@ PERLIMPORTS := "perlimports -i --config-file=" + PWD / ".perlimports.toml"
 PERLTIDY := 'perltidier'
 PLACK_ENV := 'test'
 YATH := 'yath'
+
 DB_FILE := PWD / "db" / "dev.db"
 SCHEMA := PWD / "sql" / "schema.sql"
+
 LOCAL_BIN := PWD / "local" / "bin"
 export PATH := LOCAL_BIN + ":" + env("PATH")
 export PERL5LIB := PERL5LIB_LIB
+export PSGI_PATH := PWD / "psgi"
 
 default:
     @just --list
