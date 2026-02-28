@@ -184,12 +184,16 @@ signature_for random => (
 );
 
 sub random ($class, $args) {
-  my $id = $args->{id} // random_v4uuid;
+  my $id    = $args->{id} // random_v4uuid;
+  my $owner = GL::User->random(org => $id);
+  if (defined $args->{key_version}) {
+    $owner->key_version($args->{key_version});
+  }
 
   return $class->new(
     id             => $id,
     name           => $args->{name} // random_v4uuid,
-    owner          => GL::User->random(org => $id),
+    owner          => $owner,
     role           => $args->{role}           // $ROLE_TEST,
     schema_version => $args->{schema_version} // $SCHEMA_VERSION,
     status         => $args->{status}         // $STATUS_ACTIVE,
