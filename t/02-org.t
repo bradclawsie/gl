@@ -89,6 +89,8 @@ subtest 'read' => sub {
       my $read_org = GL::Org->read($rt->db, $rt->get_key, $org->id);
       $org->owner->clear_ed25519_private;
       is($read_org, $org, 'read org');
+      my $read_owner = GL::User->read($rt->db, $rt->get_key, $org->owner->id);
+      is($read_owner, $org->owner);
     },
     'read lives'
   ) or note($EVAL_ERROR);

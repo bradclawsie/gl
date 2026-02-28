@@ -34,7 +34,7 @@ signature_for insert => (
 
 sub insert ($self, $db, $get_key) {
 
-  $self->owner->insert($db, $get_key);
+  # $self->owner->insert($db, $get_key);
 
   my $query = <<~'INSERT_ORG';
     insert into org
@@ -51,8 +51,11 @@ sub insert ($self, $db, $get_key) {
 
   my $returning;
   try {
-    $returning = $db->run(
+    $returning = $db->txn(
       fixup => sub {
+
+        # Both owner and org are inserted or neither.
+        $self->owner->insert($_, $get_key);
         return $_->selectrow_hashref($query, undef, $self->id, $self->name,
           $self->owner->id, $self->role, $self->schema_version, $self->status);
       }
