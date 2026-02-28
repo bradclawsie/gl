@@ -19,6 +19,7 @@ use GL::Type qw( DB Digest Ed25519Private Ed25519Public Key Password Status );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
+use GL::Type            qw( User );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -79,6 +80,7 @@ use Marlin
 signature_for ed25519 => (
   method     => true,
   positional => [ Ed25519Public, Maybe [Ed25519Private] ],
+  returns    => User,
 );
 
 # ed25519 provides for setting both the public and private
@@ -94,11 +96,13 @@ sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
   else {
     $self->clear_ed25519_private;
   }
+  return $self;
 }
 
 signature_for insert => (
   method     => true,
   positional => [ Object, CodeRef ],
+  returns    => User,
 );
 
 sub insert ($self, $db, $get_key) {
@@ -180,6 +184,7 @@ sub insert ($self, $db, $get_key) {
 signature_for read => (
   method     => false,
   positional => [ ClassName, DB, CodeRef, Uuid ],
+  returns    => User,
 );
 
 sub read ($class, $db, $get_key, $id) {
@@ -203,6 +208,7 @@ sub read ($class, $db, $get_key, $id) {
 signature_for reencrypt => (
   method     => true,
   positional => [ DB, CodeRef, Uuid ],
+  returns    => User,
 );
 
 sub reencrypt ($self, $db, $get_key, $key_version) {
@@ -254,6 +260,7 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
 signature_for update_display_name => (
   method     => true,
   positional => [ DB, NonEmptyStr ],
+  returns    => User,
 );
 
 sub update_display_name ($self, $db, $display_name) {
@@ -301,6 +308,7 @@ sub update_display_name ($self, $db, $display_name) {
 signature_for update_ed25519_public => (
   method     => true,
   positional => [ DB, Ed25519Public ],
+  returns    => User,
 );
 
 sub update_ed25519_public ($self, $db, $ed25519_public) {
@@ -349,6 +357,7 @@ sub update_ed25519_public ($self, $db, $ed25519_public) {
 signature_for update_password => (
   method     => true,
   positional => [ DB, Password ],
+  returns    => User,
 );
 
 sub update_password ($self, $db, $password) {
@@ -388,6 +397,7 @@ sub update_password ($self, $db, $password) {
 signature_for update_status => (
   method     => true,
   positional => [ DB, Status ],
+  returns    => User,
 );
 
 sub update_status ($self, $db, $status) {
@@ -427,6 +437,7 @@ sub update_status ($self, $db, $status) {
 signature_for TO_JSON => (
   method     => true,
   positional => [],
+  returns    => NonEmptyStr,
 );
 
 sub TO_JSON ($self) {
@@ -444,6 +455,7 @@ sub TO_JSON ($self) {
 signature_for random => (
   method     => false,
   positional => [ ClassName, Slurpy [ HashRef [Value] ] ],
+  returns    => User,
 );
 
 sub random ($class, $args) {
