@@ -73,6 +73,13 @@ my $key = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($key);
 
+my $logline = 'Type::Tiny'->new(
+  name       => 'LogLine',
+  constraint => sub { $_ isa GL::LogLine },
+  message    => sub { 'bad logline' },
+);
+__PACKAGE__->meta->add_type($logline);
+
 my $org = 'Type::Tiny'->new(
   name       => 'Org',
   constraint => sub { $_ isa GL::Org },
