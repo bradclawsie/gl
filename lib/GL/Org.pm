@@ -7,11 +7,12 @@ use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard qw( ClassName CodeRef HashRef InstanceOf Slurpy Value );
-use Types::UUID     qw( Uuid );
+use Types::Standard
+  qw( ArrayRef ClassName CodeRef HashRef InstanceOf Slurpy Value );
+use Types::UUID qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type      qw( DB );
+use GL::Type      qw( DB Org );
 use GL::User      ();
 
 our $VERSION   = '0.0.1';
@@ -30,12 +31,10 @@ use Marlin
 signature_for insert => (
   method     => true,
   positional => [ DB, CodeRef ],
+  returns    => Org,
 );
 
 sub insert ($self, $db, $get_key) {
-
-  # $self->owner->insert($db, $get_key);
-
   my $query = <<~'INSERT_ORG';
     insert into org
     (id,
@@ -76,6 +75,7 @@ sub insert ($self, $db, $get_key) {
 signature_for read => (
   method     => false,
   positional => [ ClassName, DB, CodeRef, Uuid ],
+  returns    => Org,
 );
 
 sub read ($class, $db, $get_key, $id) {
@@ -96,6 +96,7 @@ sub read ($class, $db, $get_key, $id) {
 signature_for update_owner => (
   method     => true,
   positional => [ DB, CodeRef, Uuid ],
+  returns    => Org,
 );
 
 sub update_owner ($self, $db, $get_key, $owner) {
@@ -140,6 +141,7 @@ sub update_owner ($self, $db, $get_key, $owner) {
 signature_for users => (
   method     => true,
   positional => [ DB, Slurpy [ HashRef [Value] ] ],
+  returns    => ArrayRef [HashRef],
 );
 
 sub users ($self, $db, $args) {
@@ -169,6 +171,7 @@ sub users ($self, $db, $args) {
 signature_for TO_JSON => (
   method     => true,
   positional => [],
+  returns    => NonEmptyStr,
 );
 
 sub TO_JSON ($self) {
@@ -184,6 +187,7 @@ sub TO_JSON ($self) {
 signature_for random => (
   method     => false,
   positional => [ ClassName, Slurpy [ HashRef [Value] ] ],
+  returns    => Org,
 );
 
 sub random ($class, $args) {
