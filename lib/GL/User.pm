@@ -10,8 +10,9 @@ use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
-use Types::UUID     qw( Uuid );
+use Types::Standard
+  qw( CodeRef ClassName HashRef Maybe Object Slurpy StrMatch Value );
+use Types::UUID qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
 use GL::Type qw( DB Digest Ed25519Private Ed25519Public Key Password Status );
@@ -97,11 +98,17 @@ sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
 
 signature_for insert => (
   method     => true,
-  positional => [ DB, CodeRef ],
+  positional => [ Object, CodeRef ],
 );
 
 sub insert ($self, $db, $get_key) {
   croak 'key_version needed to insert' unless Uuid->check($self->key_version);
+
+  # Passing $db as a DBI::db allows this insert to be composed in a txn.
+  # See GL::Org->insert.
+  unless ($db isa 'DBIx::Connector' || $db isa 'DBI::db') {
+    croak 'db must be DBIx::Connector or DBI::db';
+  }
 
   my $query = <<~'INSERT_USER';
     insert into user
@@ -130,22 +137,32 @@ sub insert ($self, $db, $get_key) {
     encrypt($self->ed25519_public, $key, random_iv);
   my $encrypted_email = encrypt($self->email, $key, random_iv);
 
+  my $f = sub ($dbh) {
+    return $dbh->selectrow_hashref(
+      $query,                    undef,
+      $encrypted_display_name,   $self->display_name_digest,
+      $encrypted_ed25519_public, $self->ed25519_public_digest,
+      $encrypted_email,          $self->email_digest,
+      $self->id,                 $self->key_version,
+      $self->org,                $self->password,
+      $self->role,               $self->schema_version,
+      $self->status,
+    );
+  };
+
   my $returning;
   try {
-    $returning = $db->run(
-      fixup => sub {
-        return $_->selectrow_hashref(
-          $query,                    undef,
-          $encrypted_display_name,   $self->display_name_digest,
-          $encrypted_ed25519_public, $self->ed25519_public_digest,
-          $encrypted_email,          $self->email_digest,
-          $self->id,                 $self->key_version,
-          $self->org,                $self->password,
-          $self->role,               $self->schema_version,
-          $self->status,
-        );
-      }
-    );
+    if ($db isa 'DBIx::Connector') {
+      $returning = $db->run(fixup => $f);
+    }
+    elsif ($db isa 'DBI::db') {
+
+      # Calling context is a txn, and $db is the txn dbh.
+      $returning = $f->($db);
+    }
+    else {
+      croak 'db must be DBIx::Connector or DBI::db';
+    }
   }
   catch ($e) {
     croak $e;
