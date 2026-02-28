@@ -66,12 +66,26 @@ my $iv = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($iv);
 
+my $jwt = 'Type::Tiny'->new(
+  name       => 'JWT',
+  constraint => sub { $_ isa GL::Crypt::JWT },
+  message    => sub { 'bad jwt' },
+);
+__PACKAGE__->meta->add_type($jwt);
+
 my $key = 'Type::Tiny'->new(
   name       => 'Key',
   constraint => sub { m/^[\da-f]{$GL::Crypt::Key::LENGTH}$/x },
   message    => sub { 'bad key' },
 );
 __PACKAGE__->meta->add_type($key);
+
+my $logline = 'Type::Tiny'->new(
+  name       => 'LogLine',
+  constraint => sub { $_ isa GL::LogLine },
+  message    => sub { 'bad logline' },
+);
+__PACKAGE__->meta->add_type($logline);
 
 my $org = 'Type::Tiny'->new(
   name       => 'Org',

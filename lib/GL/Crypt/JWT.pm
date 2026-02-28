@@ -13,6 +13,8 @@ use Types::UUID            qw( Uuid );
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:bclawsie';
 
+use GL::Type qw( JWT );
+
 Readonly::Scalar our $TOKEN_TYPE => 'Bearer';
 
 use Marlin
@@ -25,6 +27,7 @@ use Marlin
 signature_for decode => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],
+  returns    => JWT,
 );
 
 sub decode ($class, $token, $signing_key) {
@@ -34,6 +37,7 @@ sub decode ($class, $token, $signing_key) {
 signature_for encode => (
   method     => true,
   positional => [Uuid],
+  returns    => NonEmptyStr,
 );
 
 sub encode ($self, $signing_key) {
@@ -53,6 +57,7 @@ sub encode ($self, $signing_key) {
 signature_for from_header => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],
+  returns    => JWT,
 );
 
 sub from_header ($class, $header, $signing_key) {
@@ -65,6 +70,7 @@ sub from_header ($class, $header, $signing_key) {
 signature_for to_header => (
   method     => true,
   positional => [Uuid],
+  returns    => NonEmptyStr,
 );
 
 sub to_header ($self, $signing_key) {

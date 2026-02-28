@@ -6,7 +6,9 @@ use Time::Piece            qw( localtime );
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
 use Types::Common::String  qw( NonEmptyStr );
-use Types::Standard        qw( ClassName InstanceOf Str );
+use Types::Standard        qw( ClassName CodeRef InstanceOf Str );
+
+use GL::Type qw( LogLine );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -20,6 +22,7 @@ use Marlin
 signature_for logdispatch_callback => (
   method     => false,
   positional => [ClassName],
+  returns    => CodeRef,
 );
 
 sub logdispatch_callback ($class) {
@@ -49,6 +52,7 @@ sub logdispatch_callback ($class) {
 signature_for parse => (
   method     => false,
   positional => [ ClassName, Str ],
+  returns    => LogLine,
 );
 
 sub parse ($class, $raw) {

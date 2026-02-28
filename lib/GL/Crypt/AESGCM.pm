@@ -17,6 +17,7 @@ our $TAG_LENGTH = 32;
 signature_for encrypt => (
   method     => false,
   positional => [ NonEmptyStr, Key, IV ],
+  returns    => NonEmptyStr,
 );
 
 sub encrypt ($text, $key, $iv) {
@@ -29,6 +30,7 @@ sub encrypt ($text, $key, $iv) {
 signature_for decrypt => (
   method     => false,
   positional => [ NonEmptyStr, Key ],
+  returns    => NonEmptyStr,
 );
 
 sub decrypt ($encrypted, $key) {
