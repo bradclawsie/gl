@@ -1,6 +1,7 @@
 package GL::Type;
 use v5.42;
 use strictures 2;
+use Role::Tiny;
 use Type::Library -base;
 use Type::Tiny;
 
@@ -72,6 +73,13 @@ my $key = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($key);
 
+my $org = 'Type::Tiny'->new(
+  name       => 'Org',
+  constraint => sub { $_ isa GL::Org },
+  message    => sub { 'bad org' },
+);
+__PACKAGE__->meta->add_type($org);
+
 my $password = 'Type::Tiny'->new(
   name       => 'Password',
   constraint => sub { m/^\$argon2/x },
@@ -87,6 +95,13 @@ my $role = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($role);
 
+my $runtime = 'Type::Tiny'->new(
+  name       => 'Runtime',
+  constraint => sub { Role::Tiny::does_role($_, 'GL::Runtime') },
+  message    => sub { 'bad runtime' },
+);
+__PACKAGE__->meta->add_type($runtime);
+
 my $status = 'Type::Tiny'->new(
   name       => 'Status',
   constraint => sub {
@@ -95,6 +110,13 @@ my $status = 'Type::Tiny'->new(
   message => sub { 'bad status' },
 );
 __PACKAGE__->meta->add_type($status);
+
+my $user = 'Type::Tiny'->new(
+  name       => 'User',
+  constraint => sub { $_ isa GL::User },
+  message    => sub { 'bad user' },
+);
+__PACKAGE__->meta->add_type($user);
 
 __PACKAGE__->meta->make_immutable;
 

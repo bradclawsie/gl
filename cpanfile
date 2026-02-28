@@ -29,6 +29,7 @@ requires 'Perl::Critic::TooMuchCode';
 requires 'Perl::Tidy';
 requires 'Perl::Tidy::Sweetened';
 requires 'Readonly';
+requires 'Role::Tiny';
 requires 'strictures';
 requires 'Term::ReadLine::Gnu';
 requires 'Test2::Harness';
