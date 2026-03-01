@@ -47,21 +47,15 @@ sub insert ($self, $db, $get_key, $hmac) {
     returning ctime, insert_order, mtime, signature
     INSERT_ORG
 
-  my $returning;
-  try {
-    $returning = $db->txn(
-      fixup => sub {
+  my $returning = $db->txn(
+    fixup => sub {
 
-        # Both owner and org are inserted or neither.
-        $self->owner->insert($_, $get_key, $hmac);
-        return $_->selectrow_hashref($query, undef, $self->id, $self->name,
-          $self->owner->id, $self->role, $self->schema_version, $self->status);
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+      # Both owner and org are inserted or neither.
+      $self->owner->insert($_, $get_key, $hmac);
+      return $_->selectrow_hashref($query, undef, $self->id, $self->name,
+        $self->owner->id, $self->role, $self->schema_version, $self->status);
+    }
+  );
 
   $self->{ctime}        = $returning->{ctime};
   $self->{insert_order} = $returning->{insert_order};

@@ -214,23 +214,17 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
     encrypt($self->ed25519_public, $key, random_iv);
   my $encrypted_email = encrypt($self->email, $key, random_iv);
 
-  my $returning;
-  try {
-    $returning = $db->run(
-      fixup => sub {
-        my $sth = $_->prepare($query);
-        $sth->execute($encrypted_display_name, $encrypted_ed25519_public,
-          $encrypted_email, $key_version, $self->id);
-        my $updates = $sth->fetchrow_hashref;
-        return $updates if $sth->rows == 1;
-        return undef    if $sth->rows == 0;
-        croak 'rows affected > 1';
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+  my $returning = $db->run(
+    fixup => sub {
+      my $sth = $_->prepare($query);
+      $sth->execute($encrypted_display_name, $encrypted_ed25519_public,
+        $encrypted_email, $key_version, $self->id);
+      my $updates = $sth->fetchrow_hashref;
+      return $updates if $sth->rows == 1;
+      return undef    if $sth->rows == 0;
+      croak 'rows affected > 1';
+    }
+  );
 
   croak 'no rows affected' unless defined $returning;
 
@@ -262,22 +256,16 @@ sub update_display_name ($self, $db, $hmac, $display_name) {
   my $encrypted_display_name = encrypt($display_name, $key, random_iv);
   my $display_name_digest    = $hmac->($display_name);
 
-  my $returning;
-  try {
-    $returning = $db->run(
-      fixup => sub {
-        my $sth = $_->prepare($query);
-        $sth->execute($encrypted_display_name, $display_name_digest, $self->id);
-        my $updates = $sth->fetchrow_hashref;
-        return $updates if $sth->rows == 1;
-        return undef    if $sth->rows == 0;
-        croak 'rows affected > 1';
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+  my $returning = $db->run(
+    fixup => sub {
+      my $sth = $_->prepare($query);
+      $sth->execute($encrypted_display_name, $display_name_digest, $self->id);
+      my $updates = $sth->fetchrow_hashref;
+      return $updates if $sth->rows == 1;
+      return undef    if $sth->rows == 0;
+      croak 'rows affected > 1';
+    }
+  );
 
   croak 'no rows affected' unless defined $returning;
 
@@ -309,23 +297,17 @@ sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
   my $encrypted_ed25519_public = encrypt($ed25519_public, $key, random_iv);
   my $ed25519_public_digest    = $hmac->($ed25519_public);
 
-  my $returning;
-  try {
-    $returning = $db->run(
-      fixup => sub {
-        my $sth = $_->prepare($query);
-        $sth->execute($encrypted_ed25519_public, $ed25519_public_digest,
-          $self->id);
-        my $updates = $sth->fetchrow_hashref;
-        return $updates if $sth->rows == 1;
-        return undef    if $sth->rows == 0;
-        croak 'rows affected > 1';
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+  my $returning = $db->run(
+    fixup => sub {
+      my $sth = $_->prepare($query);
+      $sth->execute($encrypted_ed25519_public, $ed25519_public_digest,
+        $self->id);
+      my $updates = $sth->fetchrow_hashref;
+      return $updates if $sth->rows == 1;
+      return undef    if $sth->rows == 0;
+      croak 'rows affected > 1';
+    }
+  );
 
   croak 'no rows affected' unless defined $returning;
 
@@ -351,22 +333,16 @@ sub update_password ($self, $db, $password) {
   returning mtime, signature
   UPDATE_USER
 
-  my $returning;
-  try {
-    $returning = $db->run(
-      fixup => sub {
-        my $sth = $_->prepare($query);
-        $sth->execute($password, $self->id);
-        my $updates = $sth->fetchrow_hashref;
-        return $updates if $sth->rows == 1;
-        return undef    if $sth->rows == 0;
-        croak 'rows affected > 1';
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+  my $returning = $db->run(
+    fixup => sub {
+      my $sth = $_->prepare($query);
+      $sth->execute($password, $self->id);
+      my $updates = $sth->fetchrow_hashref;
+      return $updates if $sth->rows == 1;
+      return undef    if $sth->rows == 0;
+      croak 'rows affected > 1';
+    }
+  );
 
   croak 'no rows affected' unless defined $returning;
 
@@ -391,22 +367,16 @@ sub update_status ($self, $db, $status) {
   returning mtime, signature
   UPDATE_USER
 
-  my $returning;
-  try {
-    $returning = $db->run(
-      fixup => sub {
-        my $sth = $_->prepare($query);
-        $sth->execute($status, $self->id);
-        my $updates = $sth->fetchrow_hashref;
-        return $updates if $sth->rows == 1;
-        return undef    if $sth->rows == 0;
-        croak 'rows affected > 1';
-      }
-    );
-  }
-  catch ($e) {
-    croak $e;
-  }
+  my $returning = $db->run(
+    fixup => sub {
+      my $sth = $_->prepare($query);
+      $sth->execute($status, $self->id);
+      my $updates = $sth->fetchrow_hashref;
+      return $updates if $sth->rows == 1;
+      return undef    if $sth->rows == 0;
+      croak 'rows affected > 1';
+    }
+  );
 
   croak 'no rows affected' unless defined $returning;
 
