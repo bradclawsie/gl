@@ -38,6 +38,7 @@ use Marlin
   }
   },
 
+  # Digests are only populated on db read, insert or update.
   'display_name_digest' => Digest,
 
   # Typically this is undefined. If it is ever defined, it is
@@ -56,6 +57,7 @@ use Marlin
   }
   },
 
+  # Digests are only populated on db read, insert or update.
   'ed25519_public_digest' => Digest,
 
   'email!' => {
@@ -66,6 +68,7 @@ use Marlin
   }
   },
 
+  # Digests are only populated on db read, insert or update.
   'email_digest' => Digest,
 
   'key==' => Maybe [Key],
@@ -101,11 +104,11 @@ sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
 
 signature_for insert => (
   method     => true,
-  positional => [ Object, CodeRef ],
+  positional => [ Object, CodeRef, CodeRef ],
   returns    => User,
 );
 
-sub insert ($self, $db, $get_key) {
+sub insert ($self, $db, $get_key, $hmac) {
   croak 'key_version needed to insert' unless Uuid->check($self->key_version);
 
   # Passing $db as a DBI::db allows this insert to be composed in a txn.
@@ -259,11 +262,11 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
 
 signature_for update_display_name => (
   method     => true,
-  positional => [ DB, NonEmptyStr ],
+  positional => [ DB, CodeRef, NonEmptyStr ],
   returns    => User,
 );
 
-sub update_display_name ($self, $db, $display_name) {
+sub update_display_name ($self, $db, $hmac, $display_name) {
   my $query = <<~'UPDATE_USER';
   update user 
   set display_name = ?,
@@ -307,11 +310,11 @@ sub update_display_name ($self, $db, $display_name) {
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, Ed25519Public ],
+  positional => [ DB, CodeRef, Ed25519Public ],
   returns    => User,
 );
 
-sub update_ed25519_public ($self, $db, $ed25519_public) {
+sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
   my $query = <<~'UPDATE_USER';
   update user 
   set ed25519_public = ?,

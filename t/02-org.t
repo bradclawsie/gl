@@ -41,7 +41,7 @@ subtest 'insert' => sub {
       my $now = time;
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
       ok($org->ctime >= $now, 'valid ctime');
       ok($org->mtime >= $now, 'valid mtime');
       is(1, $org->insert_order, 'insert_order match');
@@ -56,14 +56,14 @@ subtest 'insert conflict name' => sub {
     lives {
       my $rt   = GL::Runtime::Test->new;
       my $org0 = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $caught = false;
       try {
         GL::Org->random(
           key_version => $rt->encryption_key_version,
           name        => $org0->name,
-        )->insert($rt->db, $rt->get_key);
+        )->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {
         like(
@@ -84,7 +84,7 @@ subtest 'read' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $read_org = GL::Org->read($rt->db, $rt->get_key, $org->id);
       $org->owner->clear_ed25519_private;
@@ -119,11 +119,11 @@ subtest 'update owner' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
       my $user = GL::User->random(
         key_version => $rt->encryption_key_version,
         org         => $org->id,
-      )->insert($rt->db, $rt->get_key);
+      )->insert($rt->db, $rt->get_key, $rt->hmac);
       $org->update_owner($rt->db, $rt->get_key, $user->id);
     },
     'update owner lives'
@@ -135,11 +135,11 @@ subtest 'update owner not in org' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       # Org is set to be random, so not $org->id.
       my $user = GL::User->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $caught = false;
       try {
@@ -160,12 +160,12 @@ subtest 'update owner not active' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
       my $user = GL::User->random(
         key_version => $rt->encryption_key_version,
         org         => $org->id,
         status      => $STATUS_INACTIVE,
-      )->insert($rt->db, $rt->get_key);
+      )->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $caught = false;
       try {
@@ -186,7 +186,7 @@ subtest 'update owner not found' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $caught = false;
       try {
@@ -207,14 +207,14 @@ subtest 'users' => sub {
     lives {
       my $rt  = GL::Runtime::Test->new;
       my $org = GL::Org->random(key_version => $rt->encryption_key_version,)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       for (0 .. 9) {    # Ten users + one owner = eleven total.
         my $user = GL::User->random(
           key_version => $rt->encryption_key_version,
           org         => $org->id,
         );
-        $user->insert($rt->db, $rt->get_key);
+        $user->insert($rt->db, $rt->get_key, $rt->hmac);
       }
 
       my $limit             = 5;
