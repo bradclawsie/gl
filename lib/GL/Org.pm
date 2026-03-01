@@ -63,10 +63,10 @@ sub insert ($self, $db, $get_key, $hmac) {
     croak $e;
   }
 
-  $self->ctime($returning->{ctime});
-  $self->insert_order($returning->{insert_order});
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
+  $self->{ctime}        = $returning->{ctime};
+  $self->{insert_order} = $returning->{insert_order};
+  $self->{mtime}        = $returning->{mtime};
+  $self->{signature}    = $returning->{signature};
 
   return $self;
 }
@@ -130,9 +130,9 @@ sub update_owner ($self, $db, $get_key, $owner) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->{owner} = GL::User->read($db, $get_key, $owner);
+  $self->{mtime}     = $returning->{mtime};
+  $self->{signature} = $returning->{signature};
+  $self->{owner}     = GL::User->read($db, $get_key, $owner);
 
   return $self;
 }
@@ -193,7 +193,7 @@ sub random ($class, $args) {
   my $id    = $args->{id} // random_v4uuid;
   my $owner = GL::User->random(org => $id);
   if (defined $args->{key_version}) {
-    $owner->key_version($args->{key_version});
+    $owner->{key_version} = $args->{key_version};
   }
 
   return $class->new(

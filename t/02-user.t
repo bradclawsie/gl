@@ -150,8 +150,7 @@ subtest 'insert' => sub {
       my $caught = false;
       try {
         my $rt   = GL::Runtime::Test->new;
-        my $user = GL::User->random;
-        $user->insert($rt->db, $rt->get_key, $rt->hmac);
+        my $user = GL::User->random->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {
         like($e, qr/key_version needed/, 'match key_version exception');
@@ -210,7 +209,7 @@ subtest 'insert conflict ed25519_public' => sub {
           key_version => $rt->encryption_key_version,
           org         => $user0->org,
         );
-        $user->ed25519($user0->ed25519_public, undef);
+        $user->_ed25519($user0->ed25519_public, undef);
         $user->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {

@@ -10,16 +10,16 @@ our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 use Marlin::Role
-  'ctime==' => PositiveOrZeroInt,
+  'ctime' => PositiveOrZeroInt,
 
   'id!' => {
   isa     => Uuid,
   default => Uuid->generator,
   },
 
-  'insert_order==' => PositiveOrZeroInt,
+  'insert_order' => PositiveOrZeroInt,
 
-  'mtime==' => PositiveOrZeroInt,
+  'mtime' => PositiveOrZeroInt,
 
   'role!' => {
   isa     => Role,
@@ -28,9 +28,9 @@ use Marlin::Role
 
   'schema_version' => PositiveOrZeroInt,
 
-  'signature==' => Uuid,
+  'signature' => Uuid,
 
-  'status==!' => {
+  'status!' => {
   isa     => Status,
   default => $STATUS_ACTIVE,
   };

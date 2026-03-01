@@ -52,7 +52,7 @@ sub BUILD ($self, $args) {
   $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
 
   # Finish setting up root.
-  $self->root->owner->key_version($self->encryption_key_version);
+  $self->root->owner->{key_version} = $self->encryption_key_version;
 }
 
 __END__
