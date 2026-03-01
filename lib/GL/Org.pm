@@ -170,7 +170,7 @@ sub users ($self, $db, $args) {
 signature_for TO_JSON => (
   method     => true,
   positional => [],
-  returns    => NonEmptyStr,
+  returns    => HashRef,
 );
 
 sub TO_JSON ($self) {
