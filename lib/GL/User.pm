@@ -144,13 +144,9 @@ sub insert ($self, $db, $get_key, $hmac) {
     if ($db isa 'DBIx::Connector') {
       $returning = $db->run(fixup => $f);
     }
-    elsif ($db isa 'DBI::db') {
-
+    else {
       # Calling context is a txn, and $db is the txn dbh.
       $returning = $f->($db);
-    }
-    else {
-      croak 'db must be DBIx::Connector or DBI::db';
     }
   }
   catch ($e) {
@@ -424,7 +420,7 @@ sub update_status ($self, $db, $status) {
 signature_for TO_JSON => (
   method     => true,
   positional => [],
-  returns    => NonEmptyStr,
+  returns    => HashRef,
 );
 
 sub TO_JSON ($self) {
