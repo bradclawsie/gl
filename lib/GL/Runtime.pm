@@ -14,7 +14,7 @@ use Types::Common::String qw( NonEmptyStr );
 use GL::Attribute  qw( $ROLE_TEST );
 use GL::Crypt::Key qw( random_key );
 use GL::Org        ();
-use GL::Type       qw( Role );
+use GL::Type       qw( DB Org Role );
 use GL::User       ();
 
 our $VERSION   = '0.0.1';
@@ -27,7 +27,7 @@ use Marlin::Role
   },
 
   'db' => {
-  isa     => InstanceOf ['DBIx::Connector'],
+  isa     => DB,
   lazy    => true,
   default => sub ($self) {
     my $conn = DBIx::Connector->new(@{$self->dbi});
@@ -99,14 +99,13 @@ use Marlin::Role
   },
 
   'root!' => {
-  isa     => InstanceOf ['GL::Org'],
+  isa     => Org,
   default => sub { GL::Org->random },
   },
 
-  'signing_key' => {
+  'signing_key!' => {
   isa     => Uuid,
-  lazy    => true,
-  builder => Uuid->generator,
+  default => Uuid->generator,
   },
 
   'started_at!' => {
