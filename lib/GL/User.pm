@@ -29,7 +29,7 @@ use Marlin
   -modifiers,
   -with => ['GL::Model'],
 
-  'display_name==!' => NonEmptyStr,
+  'display_name!' => NonEmptyStr,
 
   # Digests are only populated on db read, insert or update.
   'display_name_digest' => Digest,
@@ -52,25 +52,25 @@ use Marlin
   # Digests are only populated on db read, insert or update.
   'email_digest' => Digest,
 
-  'key==' => Maybe [Key],
+  'key' => Maybe [Key],
 
-  'key_version==' => Uuid,
+  'key_version' => Uuid,
 
   'org!' => Uuid,
 
-  'password==!' => Password;
+  'password!' => Password;
 
-signature_for ed25519 => (
+signature_for _ed25519 => (
   method     => true,
   positional => [ Ed25519Public, Maybe [Ed25519Private] ],
   returns    => User,
 );
 
-# ed25519 provides for setting both the public and private
+# _ed25519 provides for setting both the public and private
 # keys. If the public key is ever changed, it is assumed
 # that the caller possesses the private component, so
 # any local private key held must be erased.
-sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
+sub _ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
   $self->{ed25519_public} = $ed25519_public;
   if (defined $ed25519_private) {
     $self->{ed25519_private} = $ed25519_private;
@@ -161,11 +161,11 @@ sub insert ($self, $db, $get_key, $hmac) {
   $self->{ed25519_public_digest} = $ed25519_public_digest;
   $self->{email_digest}          = $email_digest;
 
-  $self->ctime($returning->{ctime});
-  $self->insert_order($returning->{insert_order});
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->key($key);
+  $self->{ctime}        = $returning->{ctime};
+  $self->{insert_order} = $returning->{insert_order};
+  $self->{mtime}        = $returning->{mtime};
+  $self->{signature}    = $returning->{signature};
+  $self->{key}          = $key;
 
   return $self;
 }
@@ -238,10 +238,10 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->key_version($key_version);
-  $self->key($key);
+  $self->{mtime}       = $returning->{mtime};
+  $self->{signature}   = $returning->{signature};
+  $self->{key_version} = $key_version;
+  $self->{key}         = $key;
 
   return $self;
 }
@@ -285,9 +285,9 @@ sub update_display_name ($self, $db, $hmac, $display_name) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->display_name($display_name);
+  $self->{mtime}               = $returning->{mtime};
+  $self->{signature}           = $returning->{signature};
+  $self->{display_name}        = $display_name;
   $self->{display_name_digest} = $display_name_digest;
 
   return $self;
@@ -333,9 +333,9 @@ sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->ed25519($ed25519_public, undef);
+  $self->{mtime}     = $returning->{mtime};
+  $self->{signature} = $returning->{signature};
+  $self->_ed25519($ed25519_public, undef);
   $self->{ed25519_public_digest} = $ed25519_public_digest;
 
   return $self;
@@ -374,9 +374,9 @@ sub update_password ($self, $db, $password) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->password($password);
+  $self->{mtime}     = $returning->{mtime};
+  $self->{signature} = $returning->{signature};
+  $self->{password}  = $password;
 
   return $self;
 }
@@ -414,9 +414,9 @@ sub update_status ($self, $db, $status) {
 
   croak 'no rows affected' unless defined $returning;
 
-  $self->mtime($returning->{mtime});
-  $self->signature($returning->{signature});
-  $self->status($status);
+  $self->{mtime}     = $returning->{mtime};
+  $self->{signature} = $returning->{signature};
+  $self->{status}    = $status;
 
   return $self;
 }
@@ -463,7 +463,8 @@ sub random ($class, $args) {
     status          => $args->{status}         // $STATUS_ACTIVE,
   );
 
-  $user->key_version($args->{key_version}) if defined $args->{key_version};
+  $user->{key_version} = $args->{key_version}
+    if defined $args->{key_version};
 
   return $user;
 }
