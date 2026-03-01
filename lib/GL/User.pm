@@ -29,7 +29,7 @@ use Marlin
   -modifiers,
   -with => ['GL::Model'],
 
-  'display_name==!' => NonEmptyStr,
+  'display_name!' => NonEmptyStr,
 
   # Digests are only populated on db read, insert or update.
   'display_name_digest' => Digest,
@@ -287,7 +287,7 @@ sub update_display_name ($self, $db, $hmac, $display_name) {
 
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
-  $self->display_name($display_name);
+  $self->{display_name}        = $display_name;
   $self->{display_name_digest} = $display_name_digest;
 
   return $self;
