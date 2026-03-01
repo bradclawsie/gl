@@ -1,7 +1,6 @@
 use v5.42;
 use strictures 2;
 use Carp                    qw( croak );
-use Crypt::Digest::SHA256   qw( sha256_hex );
 use Crypt::Misc             qw( random_v4uuid );
 use Crypt::PK::Ed25519      ();
 use English                 qw(-no_match_vars);
@@ -55,22 +54,11 @@ subtest 'valid User' => sub {
 
       is(undef, $u->ed25519_private, 'ed25519 private undef');
 
-      is($u->display_name_digest, sha256_hex($name0),
-        'match display name digest');
-      is($u->email_digest, sha256_hex($email0), 'match email digest');
-
-      my $name1 = 'name1';
-      $u->display_name($name1);
-      is($u->display_name_digest, sha256_hex($name1),
-        'match display name digest');
-
-      is(
-        $u->ed25519_public_digest,
-        sha256_hex($u->ed25519_public),
-        'match ed25519 public digest'
-      );
+      is($u->display_name_digest,   undef, 'display name digest unset');
+      is($u->email_digest,          undef, 'email digest unset');
+      is($u->ed25519_public_digest, undef, 'ed25519 public digest unset');
     },
-    'User digests lives'
+    'User lives'
   ) or note($EVAL_ERROR);
 
   ok(
@@ -90,13 +78,8 @@ subtest 'valid User' => sub {
 
       is($u->ed25519_private, undef,       'ed25519 private undef');
       is($u->ed25519_public,  $public_key, 'match ed25519 public');
-      is(
-        $u->ed25519_public_digest,
-        sha256_hex($u->ed25519_public),
-        'match ed25519 public digest'
-      );
     },
-    'User digests lives'
+    'User lives'
   ) or note($EVAL_ERROR);
 };
 
@@ -150,6 +133,17 @@ subtest 'insert' => sub {
       ok($user->mtime >= $now, 'valid mtime');
       is(1, $user->insert_order, 'insert_order match');
       ok(Uuid->check($user->signature), 'signature is Uuid');
+      is(
+        $user->display_name_digest,
+        $rt->hmac->($user->display_name),
+        'display name digest'
+      );
+      is(
+        $user->ed25519_public_digest,
+        $rt->hmac->($user->ed25519_public),
+        'ed25519_public digest'
+      );
+      is($user->email_digest, $rt->hmac->($user->email), 'email digest');
     },
 
     lives {
@@ -370,18 +364,13 @@ subtest 'update display name' => sub {
       isnt($user->signature, $old_signature, 'signature is new');
       is($display_name, $user->display_name, 'match display name');
       is(
-        sha256_hex($display_name),
         $user->display_name_digest,
-        'match display name digest'
+        $rt->hmac->($user->display_name),
+        'display name digest'
       );
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       is($display_name, $read_user->display_name, 'match display name');
-      is(
-        sha256_hex($display_name),
-        $read_user->display_name_digest,
-        'match display name digest'
-      );
     },
 
     lives {
@@ -416,20 +405,15 @@ subtest 'update ed25519 public' => sub {
 
       ok($user->mtime >= $old_mtime, 'valid mtime');
       isnt($user->signature, $old_signature, 'signature is new');
-      is($public_key, $user->ed25519_public, 'match ed25519 public');
-      is(
-        sha256_hex($public_key),
-        $user->ed25519_public_digest,
-        'match ed25519 public digest'
-      );
-      is(undef, $user->ed25519_private, 'ed25519 private is undef');
+      is($public_key, $user->ed25519_public,  'match ed25519 public');
+      is(undef,       $user->ed25519_private, 'ed25519 private is undef');
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       is($public_key, $read_user->ed25519_public, 'match ed25519 public');
       is(
-        sha256_hex($public_key),
-        $read_user->ed25519_public_digest,
-        'match ed25519 public digest'
+        $user->ed25519_public_digest,
+        $rt->hmac->($user->ed25519_public),
+        'ed25519_public digest'
       );
     },
 
