@@ -103,7 +103,7 @@ use Marlin::Role
   default => sub { GL::Org->random },
   },
 
-  'signing_key!' => {
+  'token_key!' => {
   isa     => Uuid,
   default => Uuid->generator,
   },

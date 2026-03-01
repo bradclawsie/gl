@@ -30,8 +30,8 @@ signature_for decode => (
   returns    => JWT,
 );
 
-sub decode ($class, $token, $signing_key) {
-  return $class->new(decode_jwt(token => $token, key => $signing_key));
+sub decode ($class, $token, $token_key) {
+  return $class->new(decode_jwt(token => $token, key => $token_key));
 }
 
 signature_for encode => (
@@ -40,7 +40,7 @@ signature_for encode => (
   returns    => NonEmptyStr,
 );
 
-sub encode ($self, $signing_key) {
+sub encode ($self, $token_key) {
   return encode_jwt(
     payload => {
       exp => $self->exp,
@@ -50,7 +50,7 @@ sub encode ($self, $signing_key) {
       sub => $self->sub,
     },
     alg => 'HS256',
-    key => $signing_key
+    key => $token_key
   );
 }
 
@@ -60,9 +60,9 @@ signature_for from_header => (
   returns    => JWT,
 );
 
-sub from_header ($class, $header, $signing_key) {
+sub from_header ($class, $header, $token_key) {
   if ($header =~ m/^$TOKEN_TYPE\s+(\S+)\s*$/x) {
-    return $class->decode($1, $signing_key);
+    return $class->decode($1, $token_key);
   }
   croak 'bad header';
 }
@@ -73,8 +73,8 @@ signature_for to_header => (
   returns    => NonEmptyStr,
 );
 
-sub to_header ($self, $signing_key) {
-  return $TOKEN_TYPE . q{ } . $self->encode($signing_key);
+sub to_header ($self, $token_key) {
+  return $TOKEN_TYPE . q{ } . $self->encode($token_key);
 }
 
 __END__
