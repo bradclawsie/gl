@@ -2,6 +2,7 @@ package GL::Runtime;
 use v5.42;
 use strictures 2;
 use Carp                  qw( croak );
+use Crypt::Mac::HMAC      qw( hmac_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use DBIx::Connector       ();
 use File::Spec            ();
@@ -14,7 +15,7 @@ use Types::Common::String qw( NonEmptyStr );
 use GL::Attribute  qw( $ROLE_TEST );
 use GL::Crypt::Key qw( random_key );
 use GL::Org        ();
-use GL::Type       qw( Role );
+use GL::Type       qw( DB Org Role );
 use GL::User       ();
 
 our $VERSION   = '0.0.1';
@@ -27,7 +28,7 @@ use Marlin::Role
   },
 
   'db' => {
-  isa     => InstanceOf ['DBIx::Connector'],
+  isa     => DB,
   lazy    => true,
   default => sub ($self) {
     my $conn = DBIx::Connector->new(@{$self->dbi});
@@ -60,6 +61,11 @@ use Marlin::Role
   default => $ROLE_TEST,
   },
 
+  'encryption_key_version!' => {
+  isa     => Uuid,
+  default => Uuid->generator,
+  },
+
   'get_key' => {
   isa     => CodeRef,
   lazy    => true,
@@ -74,12 +80,18 @@ use Marlin::Role
     return sub ($key_version) {
       return $encryption_keys->{$key_version} // croak 'bad key_version';
     };
-  }
+  },
   },
 
-  'encryption_key_version!' => {
-  isa     => Uuid,
-  default => Uuid->generator,
+  'hmac' => {
+  isa     => CodeRef,
+  lazy    => true,
+  builder => sub ($self) {
+    my $key = random_v4uuid;
+    return sub ($data) {
+      return hmac_hex('SHA256', $key, $data);
+    };
+  },
   },
 
   'log' => {
@@ -99,14 +111,13 @@ use Marlin::Role
   },
 
   'root!' => {
-  isa     => InstanceOf ['GL::Org'],
+  isa     => Org,
   default => sub { GL::Org->random },
   },
 
-  'signing_key' => {
+  'token_key!' => {
   isa     => Uuid,
-  lazy    => true,
-  builder => Uuid->generator,
+  default => Uuid->generator,
   },
 
   'started_at!' => {

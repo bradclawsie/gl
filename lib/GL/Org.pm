@@ -30,11 +30,11 @@ use Marlin
 
 signature_for insert => (
   method     => true,
-  positional => [ DB, CodeRef ],
+  positional => [ DB, CodeRef, CodeRef ],
   returns    => Org,
 );
 
-sub insert ($self, $db, $get_key) {
+sub insert ($self, $db, $get_key, $hmac) {
   my $query = <<~'INSERT_ORG';
     insert into org
     (id,
@@ -54,7 +54,7 @@ sub insert ($self, $db, $get_key) {
       fixup => sub {
 
         # Both owner and org are inserted or neither.
-        $self->owner->insert($_, $get_key);
+        $self->owner->insert($_, $get_key, $hmac);
         return $_->selectrow_hashref($query, undef, $self->id, $self->name,
           $self->owner->id, $self->role, $self->schema_version, $self->status);
       }

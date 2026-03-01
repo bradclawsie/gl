@@ -1,7 +1,6 @@
 use v5.42;
 use strictures 2;
 use Carp                    qw( croak );
-use Crypt::Digest::SHA256   qw( sha256_hex );
 use Crypt::Misc             qw( random_v4uuid );
 use Crypt::PK::Ed25519      ();
 use English                 qw(-no_match_vars);
@@ -55,22 +54,11 @@ subtest 'valid User' => sub {
 
       is(undef, $u->ed25519_private, 'ed25519 private undef');
 
-      is($u->display_name_digest, sha256_hex($name0),
-        'match display name digest');
-      is($u->email_digest, sha256_hex($email0), 'match email digest');
-
-      my $name1 = 'name1';
-      $u->display_name($name1);
-      is($u->display_name_digest, sha256_hex($name1),
-        'match display name digest');
-
-      is(
-        $u->ed25519_public_digest,
-        sha256_hex($u->ed25519_public),
-        'match ed25519 public digest'
-      );
+      is($u->display_name_digest,   undef, 'display name digest unset');
+      is($u->email_digest,          undef, 'email digest unset');
+      is($u->ed25519_public_digest, undef, 'ed25519 public digest unset');
     },
-    'User digests lives'
+    'User lives'
   ) or note($EVAL_ERROR);
 
   ok(
@@ -90,13 +78,8 @@ subtest 'valid User' => sub {
 
       is($u->ed25519_private, undef,       'ed25519 private undef');
       is($u->ed25519_public,  $public_key, 'match ed25519 public');
-      is(
-        $u->ed25519_public_digest,
-        sha256_hex($u->ed25519_public),
-        'match ed25519 public digest'
-      );
     },
-    'User digests lives'
+    'User lives'
   ) or note($EVAL_ERROR);
 };
 
@@ -144,12 +127,23 @@ subtest 'insert' => sub {
       my $rt   = GL::Runtime::Test->new;
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
       is(undef, $user->key, 'key is undef');
-      $user->insert($rt->db, $rt->get_key);
+      $user->insert($rt->db, $rt->get_key, $rt->hmac);
       isnt(undef, $user->key, 'key is defined');
       ok($user->ctime >= $now, 'valid ctime');
       ok($user->mtime >= $now, 'valid mtime');
       is(1, $user->insert_order, 'insert_order match');
       ok(Uuid->check($user->signature), 'signature is Uuid');
+      is(
+        $user->display_name_digest,
+        $rt->hmac->($user->display_name),
+        'display name digest'
+      );
+      is(
+        $user->ed25519_public_digest,
+        $rt->hmac->($user->ed25519_public),
+        'ed25519_public digest'
+      );
+      is($user->email_digest, $rt->hmac->($user->email), 'email digest');
     },
 
     lives {
@@ -157,7 +151,7 @@ subtest 'insert' => sub {
       try {
         my $rt   = GL::Runtime::Test->new;
         my $user = GL::User->random;
-        $user->insert($rt->db, $rt->get_key);
+        $user->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {
         like($e, qr/key_version needed/, 'match key_version exception');
@@ -176,7 +170,7 @@ subtest 'insert conflict email' => sub {
   ok(
     lives {
       $user0 = GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $caught = false;
       try {
@@ -184,7 +178,7 @@ subtest 'insert conflict email' => sub {
           email       => $user0->email,
           key_version => $rt->encryption_key_version,
           org         => $user0->org,
-        )->insert($rt->db, $rt->get_key);
+        )->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {
         like(
@@ -206,7 +200,7 @@ subtest 'insert conflict ed25519_public' => sub {
   ok(
     lives {
       $user0 = GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
     },
 
     lives {
@@ -217,7 +211,7 @@ subtest 'insert conflict ed25519_public' => sub {
           org         => $user0->org,
         );
         $user->ed25519($user0->ed25519_public, undef);
-        $user->insert($rt->db, $rt->get_key);
+        $user->insert($rt->db, $rt->get_key, $rt->hmac);
       }
       catch ($e) {
         like(
@@ -239,7 +233,7 @@ subtest 'read' => sub {
       my $now  = time;
       my $rt   = GL::Runtime::Test->new;
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
-      $user->insert($rt->db, $rt->get_key);
+      $user->insert($rt->db, $rt->get_key, $rt->hmac);
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       $user->clear_ed25519_private;
@@ -307,7 +301,7 @@ subtest 'reencrypt' => sub {
       );
 
       my $user = GL::User->random(key_version => $rt->encryption_key_version);
-      $user->insert($rt->db, $rt->get_key);
+      $user->insert($rt->db, $rt->get_key, $rt->hmac);
       my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
 
       is($current_encryption_key_version,
@@ -361,27 +355,22 @@ subtest 'update display name' => sub {
       my $display_name = random_v4uuid;
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
       my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
 
-      $user->update_display_name($rt->db, $display_name);
+      $user->update_display_name($rt->db, $rt->hmac, $display_name);
 
       ok($user->mtime >= $old_mtime, 'valid mtime');
       isnt($user->signature, $old_signature, 'signature is new');
       is($display_name, $user->display_name, 'match display name');
       is(
-        sha256_hex($display_name),
         $user->display_name_digest,
-        'match display name digest'
+        $rt->hmac->($user->display_name),
+        'display name digest'
       );
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       is($display_name, $read_user->display_name, 'match display name');
-      is(
-        sha256_hex($display_name),
-        $read_user->display_name_digest,
-        'match display name digest'
-      );
     },
 
     lives {
@@ -390,7 +379,7 @@ subtest 'update display name' => sub {
       try {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
-          ->update_display_name($rt->db, random_v4uuid);
+          ->update_display_name($rt->db, $rt->hmac, random_v4uuid);
       }
       catch ($e) {
         $caught = true;
@@ -408,28 +397,23 @@ subtest 'update ed25519 public' => sub {
       my $public_key = $pk->export_key_pem('public');
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key);
+        ->insert($rt->db, $rt->get_key, $rt->hmac);
       my ($old_mtime, $old_signature) = ($user->mtime, $user->signature);
       isnt(undef, $user->ed25519_private, 'ed25519 private is undef');
 
-      $user->update_ed25519_public($rt->db, $public_key);
+      $user->update_ed25519_public($rt->db, $rt->hmac, $public_key);
 
       ok($user->mtime >= $old_mtime, 'valid mtime');
       isnt($user->signature, $old_signature, 'signature is new');
-      is($public_key, $user->ed25519_public, 'match ed25519 public');
-      is(
-        sha256_hex($public_key),
-        $user->ed25519_public_digest,
-        'match ed25519 public digest'
-      );
-      is(undef, $user->ed25519_private, 'ed25519 private is undef');
+      is($public_key, $user->ed25519_public,  'match ed25519 public');
+      is(undef,       $user->ed25519_private, 'ed25519 private is undef');
 
       my $read_user = GL::User->read($rt->db, $rt->get_key, $user->id);
       is($public_key, $read_user->ed25519_public, 'match ed25519 public');
       is(
-        sha256_hex($public_key),
-        $read_user->ed25519_public_digest,
-        'match ed25519 public digest'
+        $user->ed25519_public_digest,
+        $rt->hmac->($user->ed25519_public),
+        'ed25519_public digest'
       );
     },
 
@@ -441,7 +425,7 @@ subtest 'update ed25519 public' => sub {
       try {
         # User is never inserted, so the update doesn't change a row.
         my $user = GL::User->random(key_version => $rt->encryption_key_version)
-          ->update_ed25519_public($rt->db, $public_key);
+          ->update_ed25519_public($rt->db, $rt->hmac, $public_key);
       }
       catch ($e) {
         $caught = true;
@@ -459,7 +443,7 @@ subtest 'update password' => sub {
       my $password = random_password;
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key)
+        ->insert($rt->db, $rt->get_key, $rt->hmac)
         ->update_password($rt->db, $password);
 
       is($password, $user->password, 'match password');
@@ -492,7 +476,7 @@ subtest 'update status' => sub {
       my $rt = GL::Runtime::Test->new;
       my $user =
         GL::User->random(key_version => $rt->encryption_key_version)
-        ->insert($rt->db, $rt->get_key)
+        ->insert($rt->db, $rt->get_key, $rt->hmac)
         ->update_status($rt->db, $STATUS_INACTIVE);
 
       is($STATUS_INACTIVE, $user->status, 'match status');

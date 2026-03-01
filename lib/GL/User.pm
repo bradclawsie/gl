@@ -2,7 +2,6 @@ package GL::User;
 use v5.42;
 use strictures 2;
 use Carp                  qw( croak );
-use Crypt::Digest::SHA256 qw( sha256_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use Crypt::PK::Ed25519    ();
 use Email::Address        ();
@@ -30,14 +29,9 @@ use Marlin
   -modifiers,
   -with => ['GL::Model'],
 
-  'display_name==!' => {
-  isa     => NonEmptyStr,
-  trigger => sub ($self, @args) {
-    return unless scalar(@args) && defined($args[0]);
-    $self->{display_name_digest} = sha256_hex($args[0]);
-  }
-  },
+  'display_name==!' => NonEmptyStr,
 
+  # Digests are only populated on db read, insert or update.
   'display_name_digest' => Digest,
 
   # Typically this is undefined. If it is ever defined, it is
@@ -48,24 +42,14 @@ use Marlin
   clearer => true,
   },
 
-  'ed25519_public!' => {
-  isa     => Ed25519Public,
-  trigger => sub ($self, @args) {
-    return unless scalar(@args) && defined($args[0]);
-    $self->{ed25519_public_digest} = sha256_hex($args[0]);
-  }
-  },
+  'ed25519_public!' => Ed25519Public,
 
+  # Digests are only populated on db read, insert or update.
   'ed25519_public_digest' => Digest,
 
-  'email!' => {
-  isa     => StrMatch [$Email::Address::addr_spec],
-  trigger => sub ($self, @args) {
-    return unless scalar(@args) && defined($args[0]);
-    $self->{email_digest} = sha256_hex($args[0]);
-  }
-  },
+  'email!' => StrMatch [$Email::Address::addr_spec],
 
+  # Digests are only populated on db read, insert or update.
   'email_digest' => Digest,
 
   'key==' => Maybe [Key],
@@ -74,8 +58,7 @@ use Marlin
 
   'org!' => Uuid,
 
-  'password==!' => Password,
-  ;
+  'password==!' => Password;
 
 signature_for ed25519 => (
   method     => true,
@@ -88,8 +71,7 @@ signature_for ed25519 => (
 # that the caller possesses the private component, so
 # any local private key held must be erased.
 sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
-  $self->{ed25519_public}        = $ed25519_public;
-  $self->{ed25519_public_digest} = sha256_hex($ed25519_public);
+  $self->{ed25519_public} = $ed25519_public;
   if (defined $ed25519_private) {
     $self->{ed25519_private} = $ed25519_private;
   }
@@ -101,11 +83,11 @@ sub ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
 
 signature_for insert => (
   method     => true,
-  positional => [ Object, CodeRef ],
+  positional => [ Object, CodeRef, CodeRef ],
   returns    => User,
 );
 
-sub insert ($self, $db, $get_key) {
+sub insert ($self, $db, $get_key, $hmac) {
   croak 'key_version needed to insert' unless Uuid->check($self->key_version);
 
   # Passing $db as a DBI::db allows this insert to be composed in a txn.
@@ -134,8 +116,11 @@ sub insert ($self, $db, $get_key) {
     returning ctime, insert_order, mtime, signature
     INSERT_USER
 
-  my $key = $get_key->($self->key_version);
+  my $display_name_digest   = $hmac->($self->display_name);
+  my $ed25519_public_digest = $hmac->($self->ed25519_public);
+  my $email_digest          = $hmac->($self->email);
 
+  my $key                    = $get_key->($self->key_version);
   my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
   my $encrypted_ed25519_public =
     encrypt($self->ed25519_public, $key, random_iv);
@@ -144,9 +129,9 @@ sub insert ($self, $db, $get_key) {
   my $f = sub ($dbh) {
     return $dbh->selectrow_hashref(
       $query,                    undef,
-      $encrypted_display_name,   $self->display_name_digest,
-      $encrypted_ed25519_public, $self->ed25519_public_digest,
-      $encrypted_email,          $self->email_digest,
+      $encrypted_display_name,   $display_name_digest,
+      $encrypted_ed25519_public, $ed25519_public_digest,
+      $encrypted_email,          $email_digest,
       $self->id,                 $self->key_version,
       $self->org,                $self->password,
       $self->role,               $self->schema_version,
@@ -171,6 +156,10 @@ sub insert ($self, $db, $get_key) {
   catch ($e) {
     croak $e;
   }
+
+  $self->{display_name_digest}   = $display_name_digest;
+  $self->{ed25519_public_digest} = $ed25519_public_digest;
+  $self->{email_digest}          = $email_digest;
 
   $self->ctime($returning->{ctime});
   $self->insert_order($returning->{insert_order});
@@ -259,11 +248,11 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
 
 signature_for update_display_name => (
   method     => true,
-  positional => [ DB, NonEmptyStr ],
+  positional => [ DB, CodeRef, NonEmptyStr ],
   returns    => User,
 );
 
-sub update_display_name ($self, $db, $display_name) {
+sub update_display_name ($self, $db, $hmac, $display_name) {
   my $query = <<~'UPDATE_USER';
   update user 
   set display_name = ?,
@@ -275,7 +264,7 @@ sub update_display_name ($self, $db, $display_name) {
   my $key = $self->key // croak 'key missing';
 
   my $encrypted_display_name = encrypt($display_name, $key, random_iv);
-  my $display_name_digest    = sha256_hex($display_name);
+  my $display_name_digest    = $hmac->($display_name);
 
   my $returning;
   try {
@@ -299,19 +288,18 @@ sub update_display_name ($self, $db, $display_name) {
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
   $self->display_name($display_name);
-
-  croak 'digest' if $display_name_digest ne $self->display_name_digest;
+  $self->{display_name_digest} = $display_name_digest;
 
   return $self;
 }
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, Ed25519Public ],
+  positional => [ DB, CodeRef, Ed25519Public ],
   returns    => User,
 );
 
-sub update_ed25519_public ($self, $db, $ed25519_public) {
+sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
   my $query = <<~'UPDATE_USER';
   update user 
   set ed25519_public = ?,
@@ -323,7 +311,7 @@ sub update_ed25519_public ($self, $db, $ed25519_public) {
   my $key = $self->key // croak 'key missing';
 
   my $encrypted_ed25519_public = encrypt($ed25519_public, $key, random_iv);
-  my $ed25519_public_digest    = sha256_hex($ed25519_public);
+  my $ed25519_public_digest    = $hmac->($ed25519_public);
 
   my $returning;
   try {
@@ -348,8 +336,7 @@ sub update_ed25519_public ($self, $db, $ed25519_public) {
   $self->mtime($returning->{mtime});
   $self->signature($returning->{signature});
   $self->ed25519($ed25519_public, undef);
-
-  croak 'digest' if $ed25519_public_digest ne $self->ed25519_public_digest;
+  $self->{ed25519_public_digest} = $ed25519_public_digest;
 
   return $self;
 }

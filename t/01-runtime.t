@@ -2,7 +2,7 @@ use v5.42;
 use strictures 2;
 use Crypt::Misc             qw( random_v4uuid );
 use English                 qw(-no_match_vars);
-use Test2::V0               qw( done_testing is note ok subtest );
+use Test2::V0               qw( done_testing is isnt note ok subtest );
 use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
 use Time::Piece             qw( localtime );
@@ -68,6 +68,20 @@ subtest 'get_key' => sub {
       ok($caught, 'caught bad key exception');
     },
     'get_key lives'
+  ) or note($EVAL_ERROR);
+};
+
+subtest 'hmac' => sub {
+  my $rt = GL::Runtime::Test->new;
+
+  ok(
+    lives {
+      my $data   = random_v4uuid;
+      my $digest = $rt->hmac->($data);
+      isnt($data, $digest, 'data is not digest');
+      is($digest, $rt->hmac->($data), 'digest is repeatable');
+      like($digest, qr/^[a-z0-9]+$/, 'digest is hex');
+    },
   ) or note($EVAL_ERROR);
 };
 

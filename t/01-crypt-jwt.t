@@ -20,19 +20,17 @@ subtest 'encode decode' => sub {
         nbf => $now - 10,
         sub => random_v4uuid,
       );
-      my $signing_key = random_v4uuid;
+      my $token_key = random_v4uuid;
 
       is(
         $jwt,
-        GL::Crypt::JWT->decode($jwt->encode($signing_key), $signing_key),
+        GL::Crypt::JWT->decode($jwt->encode($token_key), $token_key),
         'jwt round trip'
       );
 
       is(
         $jwt,
-        GL::Crypt::JWT->from_header(
-          $jwt->to_header($signing_key), $signing_key
-        ),
+        GL::Crypt::JWT->from_header($jwt->to_header($token_key), $token_key),
         'jwt round trip from header'
       );
     },
