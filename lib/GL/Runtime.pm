@@ -2,6 +2,7 @@ package GL::Runtime;
 use v5.42;
 use strictures 2;
 use Carp                  qw( croak );
+use Crypt::Mac::HMAC      qw( hmac_hex );
 use Crypt::Misc           qw( random_v4uuid );
 use DBIx::Connector       ();
 use File::Spec            ();
@@ -60,6 +61,11 @@ use Marlin::Role
   default => $ROLE_TEST,
   },
 
+  'encryption_key_version!' => {
+  isa     => Uuid,
+  default => Uuid->generator,
+  },
+
   'get_key' => {
   isa     => CodeRef,
   lazy    => true,
@@ -74,12 +80,18 @@ use Marlin::Role
     return sub ($key_version) {
       return $encryption_keys->{$key_version} // croak 'bad key_version';
     };
-  }
+  },
   },
 
-  'encryption_key_version!' => {
-  isa     => Uuid,
-  default => Uuid->generator,
+  'hmac' => {
+  isa     => CodeRef,
+  lazy    => true,
+  builder => sub ($self) {
+    my $key = random_v4uuid;
+    return sub ($data) {
+      return hmac_hex('SHA256', $key, $data);
+    };
+  },
   },
 
   'log' => {
