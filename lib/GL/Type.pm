@@ -26,6 +26,13 @@ my $db = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($db);
 
+my $dbh = 'Type::Tiny'->new(
+  name       => 'DBH',
+  constraint => sub { $_ isa DBI::db },
+  message    => sub { 'bad dbh' },
+);
+__PACKAGE__->meta->add_type($dbh);
+
 my $digest = 'Type::Tiny'->new(
   name       => 'Digest',
   constraint => sub { m/^[\da-fA-F]{64}$/x },

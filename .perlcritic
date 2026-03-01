@@ -1,5 +1,6 @@
 severity = 1
 [-Bangs::ProhibitNumberedNames]
+[-Bangs::ProhibitBitwiseOperators]
 [-BuiltinFunctions::ProhibitUniversalIsa]
 [-CodeLayout::ProhibitParensWithBuiltins]
 [-CodeLayout::RequireTidyCode]

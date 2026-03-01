@@ -9,16 +9,15 @@ use Readonly              ();
 use Time::Piece           ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
-use Types::Standard
-  qw( CodeRef ClassName HashRef Maybe Object Slurpy StrMatch Value );
-use Types::UUID qw( Uuid );
+use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
+use Types::UUID     qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type qw( DB Digest Ed25519Private Ed25519Public Key Password Status );
+use GL::Type
+  qw( DB DBH Digest Ed25519Private Ed25519Public Key Password Status User );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
-use GL::Type            qw( User );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -81,20 +80,17 @@ sub _ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
   return $self;
 }
 
+# insert accepts a DB (DBIx::Connector) or DBH (DBI::db) as its
+# database abstraction. This allows insert to be used within an
+# existing txn or with a fresh connection.
 signature_for insert => (
   method     => true,
-  positional => [ Object, CodeRef, CodeRef ],
+  positional => [ DB | DBH, CodeRef, CodeRef ],
   returns    => User,
 );
 
 sub insert ($self, $db, $get_key, $hmac) {
   croak 'key_version needed to insert' unless Uuid->check($self->key_version);
-
-  # Passing $db as a DBI::db allows this insert to be composed in a txn.
-  # See GL::Org->insert.
-  unless ($db isa 'DBIx::Connector' || $db isa 'DBI::db') {
-    croak 'db must be DBIx::Connector or DBI::db';
-  }
 
   my $query = <<~'INSERT_USER';
     insert into user
@@ -140,17 +136,12 @@ sub insert ($self, $db, $get_key, $hmac) {
   };
 
   my $returning;
-  try {
-    if ($db isa 'DBIx::Connector') {
-      $returning = $db->run(fixup => $f);
-    }
-    else {
-      # Calling context is a txn, and $db is the txn dbh.
-      $returning = $f->($db);
-    }
+  if ($db isa 'DBIx::Connector') {
+    $returning = $db->run(fixup => $f);
   }
-  catch ($e) {
-    croak $e;
+  else {
+    # Calling context is a txn, and $db is the txn dbh.
+    $returning = $f->($db);
   }
 
   $self->{display_name_digest}   = $display_name_digest;
@@ -396,7 +387,7 @@ signature_for TO_JSON => (
 sub TO_JSON ($self) {
   return {
     id             => $self->{id},
-    name           => $self->{display_name},
+    display_name   => $self->{display_name},
     email          => $self->{email},
     org            => $self->{org},
     ed25519_public => $self->{ed25519_public},
