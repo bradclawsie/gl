@@ -17,6 +17,8 @@ requires 'Log::Dispatch::Array';
 requires 'multidimensional';
 requires 'Marlin';
 requires 'Math::Random::ISAAC';
+requires 'Moo';
+requires 'namespace::clean';
 requires 'Path::Tiny';
 requires 'Plack';
 requires 'Plack::Middleware::LogDispatch';
