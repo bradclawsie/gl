@@ -30,7 +30,10 @@ CREATE TABLE IF NOT EXISTS org (
     -- `status` == 1 is constant `$GL::Attribute::STATUS_UNCONFIRMED`.
     -- `status` == 2 is constant `$GL::Attribute::STATUS_ACTIVE`.
     -- `status` == 3 is constant `$GL::Attribute::STATUS_INACTIVE`.
-    status INTEGER NOT NULL CHECK (status > 0 AND status < 4)
+    status INTEGER NOT NULL CHECK (status > 0 AND status < 4),
+    FOREIGN KEY (owner) REFERENCES user(id) 
+      ON DELETE CASCADE 
+      DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE TRIGGER update_org_metadata BEFORE UPDATE ON org
@@ -123,9 +126,9 @@ CREATE TABLE IF NOT EXISTS user (
     display_name_digest TEXT NOT NULL CHECK (display_name_digest != ''),
     email TEXT NOT NULL CHECK (email != ''),
     email_digest TEXT NOT NULL CHECK (email_digest != ''),
+    encryption_key_version TEXT NOT NULL CHECK (encryption_key_version != '00000000-0000-0000-0000-000000000000'),
     id TEXT UNIQUE NOT NULL CHECK (id != '00000000-0000-0000-0000-000000000000'),
     insert_order INTEGER PRIMARY KEY AUTOINCREMENT,
-    key_version TEXT NOT NULL CHECK (key_version != '00000000-0000-0000-0000-000000000000'),
     org TEXT NOT NULL CHECK (org != '00000000-0000-0000-0000-000000000000'),
     password TEXT NOT NULL CHECK (password LIKE '$argon2%'),
 
@@ -142,7 +145,10 @@ CREATE TABLE IF NOT EXISTS user (
     -- `status` == 1 is constant `$GL::Attribute::STATUS_UNCONFIRMED`.
     -- `status` == 2 is constant `$GL::Attribute::STATUS_ACTIVE`.
     -- `status` == 3 is constant `$GL::Attribute::STATUS_INACTIVE`.
-    status INTEGER NOT NULL CHECK (status > 0 AND status < 4)
+    status INTEGER NOT NULL CHECK (status > 0 AND status < 4),
+    FOREIGN KEY (org) REFERENCES org(id) 
+      ON DELETE CASCADE 
+      DEFERRABLE INITIALLY DEFERRED
 );
 CREATE UNIQUE INDEX IF NOT EXISTS user_email_digest_org ON user (email_digest, org);
 CREATE UNIQUE INDEX IF NOT EXISTS user_ed25519_public_digest_org ON user (ed25519_public_digest, org);
@@ -172,12 +178,12 @@ BEGIN
             json_object('old', OLD.display_name_digest, 'new', NEW.display_name_digest));
 END;
 
-CREATE TRIGGER user_audit_update_key_version AFTER UPDATE OF key_version ON user
-WHEN OLD.key_version != NEW.key_version
+CREATE TRIGGER user_audit_update_encryption_key_version AFTER UPDATE OF encryption_key_version ON user
+WHEN OLD.encryption_key_version != NEW.encryption_key_version
 BEGIN
     INSERT INTO audit_log (audit_table, audit_id, audit_column, old_mtime, new_mtime, old_signature, new_signature, details)
-    VALUES ('user', OLD.id, 'key_version', OLD.mtime, NEW.mtime, OLD.signature, NEW.signature, 
-            json_object('old', OLD.key_version, 'new', NEW.key_version));
+    VALUES ('user', OLD.id, 'encryption_key_version', OLD.mtime, NEW.mtime, OLD.signature, NEW.signature, 
+            json_object('old', OLD.encryption_key_version, 'new', NEW.encryption_key_version));
 END;
 
 CREATE TRIGGER user_audit_update_password AFTER UPDATE OF password ON user

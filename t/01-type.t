@@ -15,7 +15,7 @@ use GL::Attribute           qw(
 );
 use GL::Type qw( assert_IV assert_Key assert_Role assert_Status );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 subtest 'IV' => sub {

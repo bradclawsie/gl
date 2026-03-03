@@ -1,12 +1,12 @@
 # vim: set filetype=perl :
 use v5.42;
 use strictures 2;
-use JSON::MaybeXS  qw( encode_json );
-use Plack::Builder qw( builder mount );
-use Plack::Request;
-use Plack::Response;
+use JSON::MaybeXS   qw( encode_json );
+use Plack::Builder  qw( builder mount );
+use Plack::Request  ();
+use Plack::Response ();
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 my $post_handler = sub ($env) {

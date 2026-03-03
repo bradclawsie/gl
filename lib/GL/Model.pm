@@ -3,34 +3,44 @@ use v5.42;
 use strictures 2;
 use Types::Common::Numeric qw( PositiveOrZeroInt );
 use Types::UUID            qw( Uuid );
-use GL::Attribute          qw( $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type               qw( Role Status );
+
+use GL::Attribute qw( $STATUS_ACTIVE );
+use GL::Type      qw( Role Status );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Marlin::Role
-  'ctime' => PositiveOrZeroInt,
+use Moo::Role;
+use namespace::clean;
 
-  'id!' => {
+has [qw(ctime insert_order mtime)] => (
+  is  => 'rwp',
+  isa => PositiveOrZeroInt,
+);
+
+has 'id' => (
+  is      => 'ro',
   isa     => Uuid,
   default => Uuid->generator,
-  },
+);
 
-  'insert_order' => PositiveOrZeroInt,
+has 'role' => (
+  is       => 'ro',
+  isa      => Role,
+  required => true,
+);
 
-  'mtime' => PositiveOrZeroInt,
+has 'signature' => (
+  is  => 'rwp',
+  isa => Uuid,
+);
 
-  'role!' => {
-  isa     => Role,
-  default => $ROLE_TEST,
-  },
-
-  'schema_version' => PositiveOrZeroInt,
-
-  'signature' => Uuid,
-
-  'status!' => {
+has 'status' => (
+  is      => 'rwp',
   isa     => Status,
   default => $STATUS_ACTIVE,
-  };
+);
+
+requires 'schema_version';
+
+__END__

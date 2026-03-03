@@ -6,18 +6,19 @@ use Log::Dispatch::Array ();
 use Path::Tiny           qw( path );
 use Types::Standard      qw( ArrayRef Defined Object );
 
-use GL::LogLine;
+use GL::LogLine ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Marlin
-  -with => ['GL::Runtime'],
+use Moo;
+use namespace::clean;
 
-  'dbi!' => {
+has 'dbi' => (
+  is      => 'ro',
   isa     => ArrayRef [Defined],
   default => sub {
-    return [
+    [
       'dbi:SQLite:dbname=:memory:',
       q{}, q{},
       {
@@ -28,31 +29,31 @@ use Marlin
         sqlite_allow_multiple_statements => 1,
       },
     ];
-  }
   },
+);
 
-  'dispatcher!' => {
+has 'dispatcher' => (
+  is      => 'ro',
   isa     => Object,
   default => sub {
-    return Log::Dispatch::Array->new(
+    Log::Dispatch::Array->new(
       name      => 'test',
       min_level => 'debug',
       callbacks => GL::LogLine->logdispatch_callback,
     );
   },
-  },
-
-  'mode!' => {constant => 'test'};
+);
 
 sub BUILD ($self, $args) {
+
+  $self->_set_mode('test');
 
   # Build :memory: db.
   my $schema_file = $ENV{SCHEMA}                   || croak 'SCHEMA not set';
   my $schema      = path($schema_file)->slurp_utf8 || croak $!;
   $self->db->txn(fixup => sub ($dbh) { $dbh->do($schema) });
-
-  # Finish setting up root.
-  $self->root->owner->{key_version} = $self->encryption_key_version;
 }
+
+with 'GL::Runtime';
 
 __END__

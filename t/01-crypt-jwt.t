@@ -6,7 +6,7 @@ use Test2::V0               qw( done_testing is note ok subtest );
 use Test2::Tools::Exception qw( dies lives );
 use GL::Crypt::JWT          ();
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 subtest 'encode decode' => sub {

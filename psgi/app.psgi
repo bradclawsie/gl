@@ -6,7 +6,7 @@ use Crypt::Misc    qw( random_v4uuid );
 use Module::Load   qw( load );
 use Plack::Builder qw( builder enable mount );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 my $env = $ENV{PLACK_ENV} || croak 'PLACK_ENV not set';

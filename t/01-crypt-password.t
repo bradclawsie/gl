@@ -5,7 +5,7 @@ use Test2::V0               qw( done_testing is isnt note ok subtest );
 use Test2::Tools::Exception qw( lives );
 use GL::Crypt::Password     qw( text_to_password verify_password );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 my $password;

@@ -94,7 +94,7 @@ To tidy up the code and validate changes: `just tidy check critic test`.
 
 ### Object System
 
-Models use **Marlin** (a Perl role/object builder with Type::Tiny integration). Marlin attribute sigils control access: `==` for read-only setters, `!` for required-at-construction, combined as `==!`. See `GL::Model` for the base role consumed by `GL::User` and `GL::Org` via `-with`.
+Models use **Moo** (a Perl role/object builder with Type::Tiny integration). See `GL::Model` for the base role consumed by `GL::User` and `GL::Org` via `-with`.
 
 ### Type Safety
 

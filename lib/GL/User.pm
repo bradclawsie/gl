@@ -1,20 +1,29 @@
 package GL::User;
 use v5.42;
 use strictures 2;
-use Carp                  qw( croak );
-use Crypt::Misc           qw( random_v4uuid );
-use Crypt::PK::Ed25519    ();
-use Email::Address        ();
-use Readonly              ();
-use Time::Piece           ();
-use Type::Params          qw( signature_for );
-use Types::Common::String qw( NonEmptyStr );
+use Carp                   qw( croak );
+use Crypt::Misc            qw( random_v4uuid );
+use Crypt::PK::Ed25519     ();
+use Email::Address         ();
+use Readonly               ();
+use Time::Piece            ();
+use Type::Params           qw( signature_for );
+use Types::Common::Numeric qw( PositiveOrZeroInt );
+use Types::Common::String  qw( NonEmptyStr );
 use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
 use Types::UUID     qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type
-  qw( DB DBH Digest Ed25519Private Ed25519Public Key Password Status User );
+use GL::Type      qw(
+  DB
+  DBH
+  Digest
+  Ed25519Private
+  Ed25519Public
+  Password
+  Status
+  User
+);
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
 use GL::Crypt::Password qw( random_password );
@@ -24,55 +33,72 @@ our $AUTHORITY = 'cpan:bclawsie';
 
 Readonly::Scalar our $SCHEMA_VERSION => 0;
 
-use Marlin
-  -modifiers,
-  -with => ['GL::Model'],
+use Moo;
 
-  'display_name!' => NonEmptyStr,
+has 'display_name' => (
+  is       => 'rwp',
+  isa      => NonEmptyStr,
+  required => true,
+);
 
-  # Digests are only populated on db read, insert or update.
-  'display_name_digest' => Digest,
+# Digests are only set on an insert or update.
+has [qw(display_name_digest email_digest ed25519_public_digest)] => (
+  is  => 'rwp',
+  isa => Digest,
+);
 
-  # Typically this is undefined. If it is ever defined, it is
-  # created for the purpose of delivering it to the caller once,
-  # and then should be cleared.
-  'ed25519_private' => {
+has 'ed25519_private' => (
+  is      => 'rwp',
   isa     => Maybe [Ed25519Private],
   clearer => true,
-  },
-
-  'ed25519_public!' => Ed25519Public,
-
-  # Digests are only populated on db read, insert or update.
-  'ed25519_public_digest' => Digest,
-
-  'email!' => StrMatch [$Email::Address::addr_spec],
-
-  # Digests are only populated on db read, insert or update.
-  'email_digest' => Digest,
-
-  'key' => Maybe [Key],
-
-  'key_version' => Uuid,
-
-  'org!' => Uuid,
-
-  'password!' => Password;
-
-signature_for _ed25519 => (
-  method     => true,
-  positional => [ Ed25519Public, Maybe [Ed25519Private] ],
-  returns    => User,
 );
+
+has 'ed25519_public' => (
+  is       => 'rwp',
+  isa      => Ed25519Public,
+  required => true,
+);
+
+has 'email' => (
+  is       => 'ro',
+  isa      => StrMatch [$Email::Address::addr_spec],
+  required => true,
+);
+
+has 'encryption_key_version' => (
+  is       => 'rwp',
+  isa      => Uuid,
+  required => true,
+);
+
+has 'org' => (
+  is       => 'ro',
+  isa      => Uuid,
+  required => true,
+);
+
+has 'password' => (
+  is       => 'rwp',
+  isa      => Password,
+  required => true,
+);
+
+has 'schema_version' => (
+  is      => 'rwp',
+  isa     => PositiveOrZeroInt,
+  default => $SCHEMA_VERSION,
+);
+
+with 'GL::Model';
 
 # _ed25519 provides for setting both the public and private
 # keys. If the public key is ever changed, it is assumed
 # that the caller possesses the private component, so
 # any local private key held must be erased.
 sub _ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
-  $self->{ed25519_public} = $ed25519_public;
+  $self->_set_ed25519_public($ed25519_public);
   if (defined $ed25519_private) {
-    $self->{ed25519_private} = $ed25519_private;
+    $self->_set_ed25519_private($ed25519_private);
   }
   else {
     $self->clear_ed25519_private;
@@ -80,18 +106,27 @@ sub _ed25519 ($self, $ed25519_public, $ed25519_private //= undef) {
   return $self;
 }
 
-# insert accepts a DB (DBIx::Connector) or DBH (DBI::db) as its
-# database abstraction. This allows insert to be used within an
-# existing txn or with a fresh connection.
 signature_for insert => (
   method     => true,
-  positional => [ DB | DBH, CodeRef, CodeRef ],
+  positional => [ DB, CodeRef, CodeRef ],
   returns    => User,
 );
 
 sub insert ($self, $db, $get_key, $hmac) {
-  croak 'key_version needed to insert' unless Uuid->check($self->key_version);
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->insert_query($dbh, $get_key, $hmac);
+    }
+  );
+}
 
+signature_for insert_query => (
+  method     => true,
+  positional => [ DBH, CodeRef, CodeRef ],
+  returns    => User,
+);
+
+sub insert_query ($self, $dbh, $get_key, $hmac) {
   my $query = <<~'INSERT_USER';
     insert into user
     (display_name,
@@ -100,8 +135,8 @@ sub insert ($self, $db, $get_key, $hmac) {
     ed25519_public_digest,
     email,
     email_digest,
+    encryption_key_version,
     id,
-    key_version,
     org,
     password,
     role,
@@ -116,43 +151,30 @@ sub insert ($self, $db, $get_key, $hmac) {
   my $ed25519_public_digest = $hmac->($self->ed25519_public);
   my $email_digest          = $hmac->($self->email);
 
-  my $key                    = $get_key->($self->key_version);
+  my $key                    = $get_key->($self->encryption_key_version);
   my $encrypted_display_name = encrypt($self->display_name, $key, random_iv);
   my $encrypted_ed25519_public =
     encrypt($self->ed25519_public, $key, random_iv);
   my $encrypted_email = encrypt($self->email, $key, random_iv);
 
-  my $f = sub ($dbh) {
-    return $dbh->selectrow_hashref(
-      $query,                    undef,
-      $encrypted_display_name,   $display_name_digest,
-      $encrypted_ed25519_public, $ed25519_public_digest,
-      $encrypted_email,          $email_digest,
-      $self->id,                 $self->key_version,
-      $self->org,                $self->password,
-      $self->role,               $self->schema_version,
-      $self->status,
-    );
-  };
+  my $returning = $dbh->selectrow_hashref(
+    $query,                        undef,
+    $encrypted_display_name,       $display_name_digest,
+    $encrypted_ed25519_public,     $ed25519_public_digest,
+    $encrypted_email,              $email_digest,
+    $self->encryption_key_version, $self->id,
+    $self->org,                    $self->password,
+    $self->role,                   $self->schema_version,
+    $self->status,
+  );
 
-  my $returning;
-  if ($db isa 'DBIx::Connector') {
-    $returning = $db->run(fixup => $f);
-  }
-  else {
-    # Calling context is a txn, and $db is the txn dbh.
-    $returning = $f->($db);
-  }
-
-  $self->{display_name_digest}   = $display_name_digest;
-  $self->{ed25519_public_digest} = $ed25519_public_digest;
-  $self->{email_digest}          = $email_digest;
-
-  $self->{ctime}        = $returning->{ctime};
-  $self->{insert_order} = $returning->{insert_order};
-  $self->{mtime}        = $returning->{mtime};
-  $self->{signature}    = $returning->{signature};
-  $self->{key}          = $key;
+  $self->_set_display_name_digest($display_name_digest);
+  $self->_set_ed25519_public_digest($ed25519_public_digest);
+  $self->_set_email_digest($email_digest);
+  $self->_set_ctime($returning->{ctime});
+  $self->_set_insert_order($returning->{insert_order});
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
 
   return $self;
 }
@@ -164,19 +186,28 @@ signature_for read => (
 );
 
 sub read ($class, $db, $get_key, $id) {
-  my $query = 'select * from user where id = ?';
-  my $row   = $db->run(
-    fixup => sub {
-      return $_->selectrow_hashref($query, undef, $id);
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $class->read_query($dbh, $get_key, $id);
     }
   );
+}
+
+signature_for read_query => (
+  method     => false,
+  positional => [ ClassName, DBH, CodeRef, Uuid ],
+  returns    => User,
+);
+
+sub read_query ($class, $dbh, $get_key, $id) {
+  my $query = 'select * from user where id = ?';
+  my $row   = $dbh->selectrow_hashref($query, undef, $id);
   croak 'not found' unless defined $row;
 
-  my $key = $get_key->($row->{key_version});
+  my $key = $get_key->($row->{encryption_key_version});
   $row->{ed25519_public} = decrypt($row->{ed25519_public}, $key);
   $row->{display_name}   = decrypt($row->{display_name},   $key);
   $row->{email}          = decrypt($row->{email},          $key);
-  $row->{key}            = $key;
 
   return $class->new($row);
 }
@@ -187,15 +218,29 @@ signature_for reencrypt => (
   returns    => User,
 );
 
-sub reencrypt ($self, $db, $get_key, $key_version) {
-  my $key = $get_key->($key_version);
+sub reencrypt ($self, $db, $get_key, $encryption_key_version) {
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->reencrypt_query($dbh, $get_key, $encryption_key_version);
+    }
+  );
+}
+
+signature_for reencrypt_query => (
+  method     => true,
+  positional => [ DBH, CodeRef, Uuid ],
+  returns    => User,
+);
+
+sub reencrypt_query ($self, $dbh, $get_key, $encryption_key_version) {
+  my $key = $get_key->($encryption_key_version);
 
   my $query = <<~'UPDATE_USER';
   update user set
   display_name = ?,
   ed25519_public = ?,
   email = ?,
-  key_version = ?
+  encryption_key_version = ?
   where id = ?
   returning mtime, signature
   UPDATE_USER
@@ -205,35 +250,44 @@ sub reencrypt ($self, $db, $get_key, $key_version) {
     encrypt($self->ed25519_public, $key, random_iv);
   my $encrypted_email = encrypt($self->email, $key, random_iv);
 
-  my $returning = $db->run(
-    fixup => sub {
-      my $sth = $_->prepare($query);
-      $sth->execute($encrypted_display_name, $encrypted_ed25519_public,
-        $encrypted_email, $key_version, $self->id);
-      my $updates = $sth->fetchrow_hashref;
-      return $updates if $sth->rows == 1;
-      return undef    if $sth->rows == 0;
-      croak 'rows affected > 1';
-    }
-  );
+  my $sth = $dbh->prepare($query);
+  $sth->execute($encrypted_display_name, $encrypted_ed25519_public,
+    $encrypted_email, $encryption_key_version, $self->id);
+  my $returning = $sth->fetchrow_hashref;
+  croak 'no rows affected'  if $sth->rows == 0;
+  croak 'rows affected > 1' if $sth->rows != 1;
 
-  croak 'no rows affected' unless defined $returning;
-
-  $self->{mtime}       = $returning->{mtime};
-  $self->{signature}   = $returning->{signature};
-  $self->{key_version} = $key_version;
-  $self->{key}         = $key;
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
+  $self->_set_encryption_key_version($encryption_key_version);
 
   return $self;
 }
 
 signature_for update_display_name => (
   method     => true,
-  positional => [ DB, CodeRef, NonEmptyStr ],
+  positional => [ DB, CodeRef, CodeRef, NonEmptyStr ],
   returns    => User,
 );
 
-sub update_display_name ($self, $db, $hmac, $display_name) {
+sub update_display_name ($self, $db, $get_key, $hmac, $display_name) {
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->update_display_name_query($dbh, $get_key, $hmac,
+        $display_name);
+    }
+  );
+}
+
+signature_for update_display_name_query => (
+  method     => true,
+  positional => [ DBH, CodeRef, CodeRef, NonEmptyStr ],
+  returns    => User,
+);
+
+sub update_display_name_query ($self, $dbh, $get_key, $hmac, $display_name) {
+  my $key = $get_key->($self->encryption_key_version);
+
   my $query = <<~'UPDATE_USER';
   update user 
   set display_name = ?,
@@ -242,39 +296,47 @@ sub update_display_name ($self, $db, $hmac, $display_name) {
   returning mtime, signature
   UPDATE_USER
 
-  my $key = $self->key // croak 'key missing';
-
   my $encrypted_display_name = encrypt($display_name, $key, random_iv);
   my $display_name_digest    = $hmac->($display_name);
 
-  my $returning = $db->run(
-    fixup => sub {
-      my $sth = $_->prepare($query);
-      $sth->execute($encrypted_display_name, $display_name_digest, $self->id);
-      my $updates = $sth->fetchrow_hashref;
-      return $updates if $sth->rows == 1;
-      return undef    if $sth->rows == 0;
-      croak 'rows affected > 1';
-    }
-  );
+  my $sth = $dbh->prepare($query);
+  $sth->execute($encrypted_display_name, $display_name_digest, $self->id);
+  my $returning = $sth->fetchrow_hashref;
+  croak 'no rows affected'  if $sth->rows == 0;
+  croak 'rows affected > 1' if $sth->rows != 1;
 
-  croak 'no rows affected' unless defined $returning;
-
-  $self->{mtime}               = $returning->{mtime};
-  $self->{signature}           = $returning->{signature};
-  $self->{display_name}        = $display_name;
-  $self->{display_name_digest} = $display_name_digest;
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
+  $self->_set_display_name($display_name);
+  $self->_set_display_name_digest($display_name_digest);
 
   return $self;
 }
 
 signature_for update_ed25519_public => (
   method     => true,
-  positional => [ DB, CodeRef, Ed25519Public ],
+  positional => [ DB, CodeRef, CodeRef, Ed25519Public ],
   returns    => User,
 );
 
-sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
+sub update_ed25519_public ($self, $db, $get_key, $hmac, $ed25519_public) {
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->update_ed25519_public_query($dbh, $get_key, $hmac,
+        $ed25519_public);
+    }
+  );
+}
+
+signature_for update_ed25519_public_query => (
+  method     => true,
+  positional => [ DBH, CodeRef, CodeRef, Ed25519Public ],
+  returns    => User,
+);
+
+sub update_ed25519_public_query ($self, $dbh, $get_key, $hmac, $ed25519_public) {
+  my $key = $get_key->($self->encryption_key_version);
+
   my $query = <<~'UPDATE_USER';
   update user 
   set ed25519_public = ?,
@@ -283,29 +345,19 @@ sub update_ed25519_public ($self, $db, $hmac, $ed25519_public) {
   returning mtime, signature
   UPDATE_USER
 
-  my $key = $self->key // croak 'key missing';
-
   my $encrypted_ed25519_public = encrypt($ed25519_public, $key, random_iv);
   my $ed25519_public_digest    = $hmac->($ed25519_public);
 
-  my $returning = $db->run(
-    fixup => sub {
-      my $sth = $_->prepare($query);
-      $sth->execute($encrypted_ed25519_public, $ed25519_public_digest,
-        $self->id);
-      my $updates = $sth->fetchrow_hashref;
-      return $updates if $sth->rows == 1;
-      return undef    if $sth->rows == 0;
-      croak 'rows affected > 1';
-    }
-  );
+  my $sth = $dbh->prepare($query);
+  $sth->execute($encrypted_ed25519_public, $ed25519_public_digest, $self->id);
+  my $returning = $sth->fetchrow_hashref;
+  croak 'no rows affected'  if $sth->rows == 0;
+  croak 'rows affected > 1' if $sth->rows != 1;
 
-  croak 'no rows affected' unless defined $returning;
-
-  $self->{mtime}     = $returning->{mtime};
-  $self->{signature} = $returning->{signature};
-  $self->_ed25519($ed25519_public, undef);
-  $self->{ed25519_public_digest} = $ed25519_public_digest;
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
+  $self->_ed25519($ed25519_public);
+  $self->_set_ed25519_public_digest($ed25519_public_digest);
 
   return $self;
 }
@@ -317,6 +369,20 @@ signature_for update_password => (
 );
 
 sub update_password ($self, $db, $password) {
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->update_password_query($dbh, $password);
+    }
+  );
+}
+
+signature_for update_password_query => (
+  method     => true,
+  positional => [ DBH, Password ],
+  returns    => User,
+);
+
+sub update_password_query ($self, $dbh, $password) {
   my $query = <<~'UPDATE_USER';
   update user 
   set password = ?
@@ -324,22 +390,15 @@ sub update_password ($self, $db, $password) {
   returning mtime, signature
   UPDATE_USER
 
-  my $returning = $db->run(
-    fixup => sub {
-      my $sth = $_->prepare($query);
-      $sth->execute($password, $self->id);
-      my $updates = $sth->fetchrow_hashref;
-      return $updates if $sth->rows == 1;
-      return undef    if $sth->rows == 0;
-      croak 'rows affected > 1';
-    }
-  );
+  my $sth = $dbh->prepare($query);
+  $sth->execute($password, $self->id);
+  my $returning = $sth->fetchrow_hashref;
+  croak 'no rows affected'  if $sth->rows == 0;
+  croak 'rows affected > 1' if $sth->rows != 1;
 
-  croak 'no rows affected' unless defined $returning;
-
-  $self->{mtime}     = $returning->{mtime};
-  $self->{signature} = $returning->{signature};
-  $self->{password}  = $password;
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
+  $self->_set_password($password);
 
   return $self;
 }
@@ -351,6 +410,20 @@ signature_for update_status => (
 );
 
 sub update_status ($self, $db, $status) {
+  return $db->run(
+    fixup => sub ($dbh) {
+      return $self->update_status_query($dbh, $status);
+    }
+  );
+}
+
+signature_for update_status_query => (
+  method     => true,
+  positional => [ DBH, Status ],
+  returns    => User,
+);
+
+sub update_status_query ($self, $dbh, $status) {
   my $query = <<~'UPDATE_USER';
   update user 
   set status = ?
@@ -358,22 +431,15 @@ sub update_status ($self, $db, $status) {
   returning mtime, signature
   UPDATE_USER
 
-  my $returning = $db->run(
-    fixup => sub {
-      my $sth = $_->prepare($query);
-      $sth->execute($status, $self->id);
-      my $updates = $sth->fetchrow_hashref;
-      return $updates if $sth->rows == 1;
-      return undef    if $sth->rows == 0;
-      croak 'rows affected > 1';
-    }
-  );
+  my $sth = $dbh->prepare($query);
+  $sth->execute($status, $self->id);
+  my $returning = $sth->fetchrow_hashref;
+  croak 'no rows affected'  if $sth->rows == 0;
+  croak 'rows affected > 1' if $sth->rows != 1;
 
-  croak 'no rows affected' unless defined $returning;
-
-  $self->{mtime}     = $returning->{mtime};
-  $self->{signature} = $returning->{signature};
-  $self->{status}    = $status;
+  $self->_set_mtime($returning->{mtime});
+  $self->_set_signature($returning->{signature});
+  $self->_set_status($status);
 
   return $self;
 }
@@ -386,13 +452,13 @@ signature_for TO_JSON => (
 
 sub TO_JSON ($self) {
   return {
-    id             => $self->{id},
-    display_name   => $self->{display_name},
-    email          => $self->{email},
-    org            => $self->{org},
-    ed25519_public => $self->{ed25519_public},
-    ctime          => Time::Piece->gmtime($self->{ctime})->strftime($DATE),
-    mtime          => Time::Piece->gmtime($self->{mtime})->strftime($DATE),
+    id             => $self->id,
+    display_name   => $self->display_name,
+    email          => $self->email,
+    org            => $self->org,
+    ed25519_public => $self->ed25519_public,
+    ctime          => Time::Piece->gmtime($self->ctime)->strftime($DATE),
+    mtime          => Time::Piece->gmtime($self->mtime)->strftime($DATE),
   };
 }
 
@@ -402,28 +468,25 @@ signature_for random => (
   returns    => User,
 );
 
+# Note that any User generated with this must reference
+# a DB-valid org in order to satisfy the FK constaints.
 sub random ($class, $args) {
 
   my $pk = Crypt::PK::Ed25519->new->generate_key;
 
-  # Random User just gets new ed25519 key pair by default.
-  my $user = $class->new(
-    display_name    => $args->{display_name} // random_v4uuid,
-    ed25519_private => $pk->export_key_pem('private'),
-    ed25519_public  => $pk->export_key_pem('public'),
-    email           => $args->{email}          // random_v4uuid . '@local',
-    id              => $args->{id}             // random_v4uuid,
-    org             => $args->{org}            // random_v4uuid,
-    password        => $args->{password}       // random_password,
-    role            => $args->{role}           // $ROLE_TEST,
-    schema_version  => $args->{schema_version} // $SCHEMA_VERSION,
-    status          => $args->{status}         // $STATUS_ACTIVE,
+  return $class->new(
+    display_name           => $args->{display_name} // random_v4uuid,
+    ed25519_private        => $pk->export_key_pem('private'),
+    ed25519_public         => $pk->export_key_pem('public'),
+    encryption_key_version => $args->{encryption_key_version} // random_v4uuid,
+    email          => $args->{email}          // random_v4uuid . '@local',
+    id             => $args->{id}             // random_v4uuid,
+    org            => $args->{org}            // random_v4uuid,
+    password       => $args->{password}       // random_password,
+    role           => $args->{role}           // $ROLE_TEST,
+    schema_version => $args->{schema_version} // $SCHEMA_VERSION,
+    status         => $args->{status}         // $STATUS_ACTIVE,
   );
-
-  $user->{key_version} = $args->{key_version}
-    if defined $args->{key_version};
-
-  return $user;
 }
 
 __END__
