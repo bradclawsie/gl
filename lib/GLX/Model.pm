@@ -13,7 +13,13 @@ our $AUTHORITY = 'cpan:bclawsie';
 use Moo::Role;
 use namespace::clean;
 
-has [qw(ctime insert_order mtime schema_version)] => (
+has [qw(ctime insert_order schema_version)] => (
+  is       => 'ro',
+  isa      => PositiveOrZeroInt,
+  required => true,
+);
+
+has 'mtime' => (
   is       => 'rwp',
   isa      => PositiveOrZeroInt,
   required => true,
@@ -31,7 +37,7 @@ has 'role' => (
   default => $ROLE_TEST,
 );
 
-has 'schema_version' => (
+has 'signature' => (
   is  => 'rwp',
   isa => Uuid,
 );
