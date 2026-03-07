@@ -7,12 +7,12 @@ use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
 use Time::Piece             qw( localtime );
 
-use GL::Runtime::Test        ();
-use GL::Runtime::Development ();
-use GL::Type                 qw( Key );
+use GLX::Runtime::Test        ();
+use GLX::Runtime::Development ();
+use GL::Type                  qw( Key );
 
 subtest 'test db' => sub {
-  my $rt = GL::Runtime::Test->new;
+  my $rt = GLX::Runtime::Test->new;
 
   ok(
     lives {
@@ -29,7 +29,7 @@ subtest 'test db' => sub {
 };
 
 subtest 'development db' => sub {
-  my $rt = GL::Runtime::Development->new;
+  my $rt = GLX::Runtime::Development->new;
 
   ok(
     lives {
@@ -46,7 +46,7 @@ subtest 'development db' => sub {
 };
 
 subtest 'get_key' => sub {
-  my $rt = GL::Runtime::Test->new;
+  my $rt = GLX::Runtime::Test->new;
 
   ok(
     lives {
@@ -72,7 +72,7 @@ subtest 'get_key' => sub {
 };
 
 subtest 'hmac' => sub {
-  my $rt = GL::Runtime::Test->new;
+  my $rt = GLX::Runtime::Test->new;
 
   ok(
     lives {
@@ -86,7 +86,7 @@ subtest 'hmac' => sub {
 };
 
 subtest 'logger' => sub {
-  my $rt = GL::Runtime::Test->new;
+  my $rt = GLX::Runtime::Test->new;
 
   ok(
     lives {
@@ -99,7 +99,7 @@ subtest 'logger' => sub {
 };
 
 subtest 'started_at' => sub {
-  my $rt = GL::Runtime::Test->new;
+  my $rt = GLX::Runtime::Test->new;
 
   my $now  = localtime;
   my $diff = $now - $rt->started_at;

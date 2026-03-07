@@ -15,7 +15,7 @@ use Types::UUID           qw( Uuid );
 use GL::Attribute  qw( $ROLE_TEST );
 use GL::Crypt::Key qw( random_key );
 use GL::Org        ();
-use GL::Type       qw( DB Org Role );
+use GL::Type       qw( DB Mode Org Role );
 use GL::User       ();
 
 our $VERSION   = '0.0.1';
@@ -25,9 +25,9 @@ use Moo::Role;
 use namespace::clean;
 
 has 'api_version' => (
-  is       => 'ro',
-  isa      => NonEmptyStr,
-  required => true,
+  is      => 'rwp',
+  isa     => NonEmptyStr,
+  default => 'v0',
 );
 
 has 'db' => (
@@ -62,7 +62,7 @@ has 'dbh_pragmas' => (
 );
 
 has 'default_role' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => Role,
   default => $ROLE_TEST,
 );
@@ -74,7 +74,7 @@ has 'encryption_key_version' => (
 );
 
 has 'get_key' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => CodeRef,
   lazy    => true,
   builder => sub ($self) {
@@ -92,7 +92,7 @@ has 'get_key' => (
 );
 
 has 'hmac' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => CodeRef,
   lazy    => true,
   builder => sub ($self) {
@@ -114,15 +114,21 @@ has 'log' => (
   },
 );
 
+has 'mode' => (
+  is      => 'rwp',
+  isa     => Mode,
+  default => 'development',
+);
+
 has 'repository_base' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => NonEmptyStr,
   lazy    => true,
   default => File::Spec->tmpdir,
 );
 
 has 'root' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => Org,
   default => sub { GL::Org->random },
 );
@@ -134,13 +140,12 @@ has 'started_at' => (
 );
 
 has 'token_key' => (
-  is      => 'ro',
+  is      => 'rwp',
   isa     => Uuid,
   default => Uuid->generator,
 );
 
 requires 'dbi';
 requires 'dispatcher';
-requires 'mode';
 
 __END__

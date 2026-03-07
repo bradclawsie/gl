@@ -94,6 +94,14 @@ my $logline = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($logline);
 
+my $mode = 'Type::Tiny'->new(
+  name       => 'Mode',
+  constraint =>
+    sub { $_ eq 'test' || $_ eq 'development' || $_ eq 'deployment' },
+  message => sub { 'bad mode' },
+);
+__PACKAGE__->meta->add_type($mode);
+
 my $org = 'Type::Tiny'->new(
   name       => 'Org',
   constraint => sub { $_ isa GL::Org },
