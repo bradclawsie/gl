@@ -6,7 +6,7 @@ use Test2::Tools::Compare   qw( like );
 use Test2::Tools::Exception qw( lives );
 
 use GL::Runtime::Test ();
-use GLX::LogLine      ();
+use GL::LogLine       ();
 
 subtest 'logline' => sub {
   my $rt = GL::Runtime::Test->new;
@@ -15,7 +15,7 @@ subtest 'logline' => sub {
     lives {
       $rt->log->debug('0');
       my $logline = $rt->log->output('test')->array->[-1];
-      GLX::LogLine->parse($logline->{message});
+      GL::LogLine->parse($logline->{message});
     },
     'logline lives'
   ) or note($EVAL_ERROR);

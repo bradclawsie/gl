@@ -12,10 +12,11 @@ use GL::LogLine ();
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Marlin
-  -with => ['GL::Runtime'],
+use Moo;
+use namespace::clean;
 
-  'dbi!' => {
+has 'dbi' => (
+  is      => 'ro',
   isa     => ArrayRef [Defined],
   default => sub {
     my $db_file = $ENV{DB_FILE} || croak 'DB_FILE not set';
@@ -30,21 +31,20 @@ use Marlin
         sqlite_allow_multiple_statements => 1,
       },
     ];
-  }
   },
+);
 
-  'dispatcher!' => {
+has 'dispatcher' => (
+  is      => 'ro',
   isa     => Object,
   default => sub {
-    return Log::Dispatch::Screen->new(
+    Log::Dispatch::Screen->new(
       name      => 'development',
       min_level => 'debug',
       callbacks => GL::LogLine->logdispatch_callback,
     );
   },
-  },
-
-  'mode!' => {constant => 'development'};
+);
 
 sub BUILD ($self, $args) {
 
@@ -67,5 +67,7 @@ sub BUILD ($self, $args) {
   # Finish setting up root.
   $self->root->owner->{key_version} = $self->encryption_key_version;
 }
+
+with 'GL::Runtime';
 
 __END__
