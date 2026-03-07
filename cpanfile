@@ -18,6 +18,7 @@ requires 'multidimensional';
 requires 'Marlin';
 requires 'Math::Random::ISAAC';
 requires 'Moo';
+requires 'MooX::Const';
 requires 'namespace::clean';
 requires 'Path::Tiny';
 requires 'Plack';

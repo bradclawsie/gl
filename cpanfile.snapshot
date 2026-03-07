@@ -351,6 +351,19 @@ DISTRIBUTIONS
       perl 5.008001
       strict 0
       utf8 0
+  Const-Fast-0.014
+    pathname: L/LE/LEONT/Const-Fast-0.014.tar.gz
+    provides:
+      Const::Fast 0.014
+    requirements:
+      Carp 0
+      Module::Build::Tiny 0.021
+      Scalar::Util 0
+      Storable 0
+      Sub::Exporter::Progressive 0.001007
+      perl 5.008
+      strict 0
+      warnings 0
   Cookie-Baker-0.12
     pathname: K/KA/KAZEBURO/Cookie-Baker-0.12.tar.gz
     provides:
@@ -717,6 +730,13 @@ DISTRIBUTIONS
     requirements:
       Devel::StackTrace 0
       ExtUtils::MakeMaker 0
+  Devel-StrictMode-0.003
+    pathname: T/TO/TOBYINK/Devel-StrictMode-0.003.tar.gz
+    provides:
+      Devel::StrictMode 0.003
+    requirements:
+      ExtUtils::MakeMaker 6.17
+      perl 5.006
   Dist-Build-0.025
     pathname: L/LE/LEONT/Dist-Build-0.025.tar.gz
     provides:
@@ -1671,6 +1691,24 @@ DISTRIBUTIONS
       Sub::Defer 2.006006
       Sub::Quote 2.006006
       perl 5.006
+  MooX-Const-v0.7.2
+    pathname: R/RR/RRWO/MooX-Const-v0.7.2.tar.gz
+    provides:
+      MooX::Const v0.7.2
+    requirements:
+      Carp 0
+      Devel::StrictMode 0
+      ExtUtils::MakeMaker 7.22
+      Module::Metadata 1.000015
+      Moo 1.006000
+      Scalar::Util 0
+      Type::Tiny 0
+      Types::Const v0.3.3
+      Types::Standard 0
+      experimental 0
+      namespace::autoclean 0
+      perl 5.020000
+      utf8 0
   MooX-StrictConstructor-0.013
     pathname: H/HA/HAARG/MooX-StrictConstructor-0.013.tar.gz
     provides:
@@ -3519,6 +3557,24 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.58
       ExtUtils::ParseXS 3.16
       perl 5.008005
+  Types-Const-v0.5.0
+    pathname: R/RR/RRWO/Types-Const-v0.5.0.tar.gz
+    provides:
+      Types::Const v0.5.0
+    requirements:
+      Const::Fast 0
+      ExtUtils::MakeMaker 0
+      List::Util 1.33
+      Storable 3.06
+      Type::Coercion 0
+      Type::Library 0
+      Type::Tiny 1.002001
+      Type::Utils 0
+      Types::Standard 0
+      Types::TypeTiny 0
+      namespace::autoclean 0.28
+      perl 5.014000
+      warnings 0
   Types-UUID-0.004
     pathname: T/TO/TOBYINK/Types-UUID-0.004.tar.gz
     provides:
