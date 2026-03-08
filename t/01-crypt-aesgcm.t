@@ -8,7 +8,7 @@ use GL::Crypt::AESGCM       qw( decrypt encrypt );
 use GL::Crypt::IV           qw( random_iv );
 use GL::Crypt::Key          qw( random_key );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 my $iv  = random_iv;

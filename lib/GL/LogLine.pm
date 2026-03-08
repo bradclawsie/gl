@@ -2,6 +2,7 @@ package GL::LogLine;
 use v5.42;
 use strictures 2;
 use Carp                   qw( croak );
+use Readonly               ();
 use Time::Piece            qw( localtime );
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
@@ -13,11 +14,28 @@ use GL::Type qw( LogLine );
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-use Marlin
-  date                   => InstanceOf ['Time::Piece'],
-  qw(level message file) => NonEmptyStr,
-  line                   => PositiveInt,
-  date_format            => {constant => '%Y%m%d %H:%M:%S %z'};
+Readonly::Scalar our $DATE_FORMAT => '%Y%m%d %H:%M:%S %z';
+
+use Moo;
+use namespace::clean;
+
+has 'date' => (
+  is       => 'ro',
+  isa      => InstanceOf ['Time::Piece'],
+  required => true,
+);
+
+has [qw(level message file)] => (
+  is       => 'ro',
+  isa      => NonEmptyStr,
+  required => true,
+);
+
+has 'line' => (
+  is       => 'ro',
+  isa      => PositiveInt,
+  required => true,
+);
 
 signature_for logdispatch_callback => (
   method     => false,
@@ -28,7 +46,7 @@ signature_for logdispatch_callback => (
 sub logdispatch_callback ($class) {
   return sub (%args) {
     my $t       = localtime;
-    my $date    = $t->strftime($class->date_format);
+    my $date    = $t->strftime($DATE_FORMAT);
     my $level   = $args{level};
     my $message = $args{message};
 
@@ -79,7 +97,7 @@ sub parse ($class, $raw) {
     my $parsed_time;
     try {
       $parsed_time =
-        Time::Piece->strptime(${^CAPTURE}{date}, $class->date_format);
+        Time::Piece->strptime(${^CAPTURE}{date}, $DATE_FORMAT);
     }
     catch ($e) {
       croak 'bad log line date: ' . $e;
@@ -102,7 +120,7 @@ signature_for log_format => (
 );
 
 sub log_format ($self) {
-  my $date    = $self->date->strftime($self->date_format);
+  my $date    = $self->date->strftime($DATE_FORMAT);
   my $level   = $self->level;
   my $message = $self->message;
   my $file    = $self->file;

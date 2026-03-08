@@ -1,7 +1,7 @@
 package GL::Type;
 use v5.42;
 use strictures 2;
-use Role::Tiny;
+use Role::Tiny ();
 use Type::Library -base;
 use Type::Tiny;
 
@@ -68,7 +68,7 @@ __PACKAGE__->meta->add_type($ed25519_public);
 
 my $iv = 'Type::Tiny'->new(
   name       => 'IV',
-  constraint => sub { m/^[\da-f]{$GL::Crypt::IV::LENGTH}$/x },
+  constraint => sub { m/^[\da-f]{$GL::Crypt::IV::HEX_LENGTH}$/x },
   message    => sub { 'bad iv' },
 );
 __PACKAGE__->meta->add_type($iv);
@@ -82,7 +82,7 @@ __PACKAGE__->meta->add_type($jwt);
 
 my $key = 'Type::Tiny'->new(
   name       => 'Key',
-  constraint => sub { m/^[\da-f]{$GL::Crypt::Key::LENGTH}$/x },
+  constraint => sub { m/^[\da-f]{$GL::Crypt::Key::HEX_LENGTH}$/x },
   message    => sub { 'bad key' },
 );
 __PACKAGE__->meta->add_type($key);
@@ -93,6 +93,14 @@ my $logline = 'Type::Tiny'->new(
   message    => sub { 'bad logline' },
 );
 __PACKAGE__->meta->add_type($logline);
+
+my $mode = 'Type::Tiny'->new(
+  name       => 'Mode',
+  constraint =>
+    sub { $_ eq 'test' || $_ eq 'development' || $_ eq 'deployment' },
+  message => sub { 'bad mode' },
+);
+__PACKAGE__->meta->add_type($mode);
 
 my $org = 'Type::Tiny'->new(
   name       => 'Org',

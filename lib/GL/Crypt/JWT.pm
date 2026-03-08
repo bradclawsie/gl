@@ -10,20 +10,39 @@ use Types::Common::String  qw( NonEmptyStr );
 use Types::Standard        qw( ClassName );
 use Types::UUID            qw( Uuid );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 use GL::Type qw( JWT );
 
 Readonly::Scalar our $TOKEN_TYPE => 'Bearer';
 
-use Marlin
-  'exp!' => PositiveInt->where('$_ > time'),
-  'id!'  => Uuid,
-  'iss!' => NonEmptyStr->where('$_ eq q{GrokLOC.com}'),
-  'nbf!' => PositiveInt->where('$_ < time'),
-  'sub!' => Uuid;
+use Moo;
+use namespace::clean;
 
+has 'exp' => (
+  is       => 'ro',
+  isa      => PositiveInt->where('$_ > time'),
+  required => true,
+);
+
+has [qw(id sub)] => (
+  is       => 'ro',
+  isa      => Uuid,
+  required => true,
+);
+
+has 'iss' => (
+  is       => 'ro',
+  isa      => NonEmptyStr->where('$_ eq q{GrokLOC.com}'),
+  required => true,
+);
+
+has 'nbf' => (
+  is       => 'ro',
+  isa      => PositiveInt->where('$_ < time'),
+  required => true,
+);
 signature_for decode => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],

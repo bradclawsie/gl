@@ -87,5 +87,7 @@ repl: (run 'perl -de 0')
 
 test: (run 'find t -name \*.t -print0 | xargs -0 ' + YATH)
 
+vet: check imports tidy
+
 # Run a single test; e.g. "just yath t/00-test.t".
 yath TEST: (run YATH + " " + TEST)

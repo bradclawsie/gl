@@ -82,6 +82,7 @@ subtest 'hmac' => sub {
       is($digest, $rt->hmac->($data), 'digest is repeatable');
       like($digest, qr/^[a-z0-9]+$/, 'digest is hex');
     },
+    'hmac lives'
   ) or note($EVAL_ERROR);
 };
 

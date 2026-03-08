@@ -9,7 +9,7 @@ use GL::Test          qw( org_with_user );
 use GL::User          ();
 use GL::Runtime::Test ();
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 subtest 'org with user' => sub {

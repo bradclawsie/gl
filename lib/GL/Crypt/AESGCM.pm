@@ -9,7 +9,7 @@ use Types::Common::String qw( NonEmptyStr );
 
 use GL::Type qw( IV Key );
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 our $TAG_LENGTH = 32;
@@ -21,7 +21,7 @@ signature_for encrypt => (
 );
 
 sub encrypt ($text, $key, $iv) {
-  my $ae  = Crypt::AuthEnc::GCM->new('AES', $key, $iv);
+  my $ae  = Crypt::AuthEnc::GCM->new('AES', pack('H*', $key), pack('H*', $iv));
   my $ct  = unpack('H*', $ae->encrypt_add($text));
   my $tag = unpack('H*', $ae->encrypt_done());
   return $iv . $tag . $ct;    # This is $encrypted in decrypt.
@@ -34,11 +34,11 @@ signature_for decrypt => (
 );
 
 sub decrypt ($encrypted, $key) {
-  my $iv      = substr $encrypted, 0, $GL::Crypt::IV::LENGTH;
-  my $tag     = substr $encrypted, $GL::Crypt::IV::LENGTH, $TAG_LENGTH;
-  my $ct      = substr $encrypted, $GL::Crypt::IV::LENGTH + $TAG_LENGTH;
-  my $ae      = Crypt::AuthEnc::GCM->new('AES', $key, $iv);
-  my $text    = $ae->decrypt_add(pack('H*', $ct));
+  my $iv   = substr $encrypted, 0, $GL::Crypt::IV::HEX_LENGTH;
+  my $tag  = substr $encrypted, $GL::Crypt::IV::HEX_LENGTH, $TAG_LENGTH;
+  my $ct   = substr $encrypted, $GL::Crypt::IV::HEX_LENGTH + $TAG_LENGTH;
+  my $ae   = Crypt::AuthEnc::GCM->new('AES', pack('H*', $key), pack('H*', $iv));
+  my $text = $ae->decrypt_add(pack('H*', $ct));
   my $tag_out = $ae->decrypt_done();
   croak 'bad decrypt' if unpack('H*', $tag_out) ne $tag;
   return $text;

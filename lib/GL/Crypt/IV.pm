@@ -5,14 +5,14 @@ use Bytes::Random::Secure::Tiny ();
 use Exporter                    qw( import );
 use Readonly                    ();
 
-our $VERSION   = '0.01';
+our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
-Readonly::Scalar our $LENGTH => 16;
+Readonly::Scalar our $HEX_LENGTH => 24;
 
 sub random_iv {
   my $rng = Bytes::Random::Secure::Tiny->new;
-  return $rng->bytes_hex(int($LENGTH / 2));
+  return $rng->bytes_hex(int($HEX_LENGTH / 2));
 }
 
 our @EXPORT_OK   = qw( random_iv );
