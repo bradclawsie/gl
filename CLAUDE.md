@@ -69,7 +69,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-GrokLOC (`gl`) is a Perl 5.42+ web application providing organization, user, and repository management with field-level encryption, Ed25519 key management, and comprehensive audit logging. It uses SQLite, Plack/PSGI, and the Marlin object system with Type::Tiny for strict type validation.
+GrokLOC (`gl`) is a Perl 5.42+ web application providing organization, user, and repository management with field-level encryption, Ed25519 key management, and comprehensive audit logging. It uses SQLite, Plack/PSGI, and the Moo object system with Type::Tiny for strict type validation.
 
 ## Commands
 
