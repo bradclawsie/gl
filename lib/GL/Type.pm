@@ -1,7 +1,6 @@
 package GL::Type;
 use v5.42;
 use strictures 2;
-use Role::Tiny ();
 use Type::Library -base;
 use Type::Tiny;
 
@@ -126,7 +125,7 @@ __PACKAGE__->meta->add_type($role);
 
 my $runtime = 'Type::Tiny'->new(
   name       => 'Runtime',
-  constraint => sub { Role::Tiny::does_role($_, 'GL::Runtime') },
+  constraint => sub { $_->does('GL::Runtime') },
   message    => sub { 'bad runtime' },
 );
 __PACKAGE__->meta->add_type($runtime);
