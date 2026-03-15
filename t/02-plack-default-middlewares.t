@@ -4,6 +4,7 @@ use Crypt::Misc             qw( is_v4uuid random_v4uuid );
 use English                 qw(-no_match_vars);
 use HTTP::Request::Common   qw( GET );
 use Plack::Builder          qw( builder enable );
+use Plack::Response         ();
 use Plack::Test             ();
 use Test2::V0               qw( done_testing is note ok subtest );
 use Test2::Tools::Exception qw( lives );
@@ -20,8 +21,11 @@ subtest 'default middlewares' => sub {
       my $rt = GL::Runtime::Test->new;
 
       my $handler = sub ($env) {
-        $env->{'rt'}->log->debug($env->{'psgix.request_id'});
-        return [ 200, [ 'Content-Type' => 'text/plain' ], ['ok'] ];
+        $env->{rt}->log->debug($env->{'psgix.request_id'});
+        my $res = Plack::Response->new(200);
+        $res->content_type('text/plain');
+        $res->body('ok');
+        return $res->finalize;
       };
 
       my $app = builder {
@@ -29,7 +33,7 @@ subtest 'default middlewares' => sub {
         # Add runtime to $env.
         enable sub ($app) {
           return sub ($env) {
-            $env->{'rt'} = $rt;
+            $env->{rt} = $rt;
             return $app->($env);
           };
         };
