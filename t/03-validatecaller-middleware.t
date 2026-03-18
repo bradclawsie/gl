@@ -1,5 +1,6 @@
 use v5.42;
 use strictures 2;
+use Crypt::Misc             qw( random_v4uuid );
 use English                 qw(-no_match_vars);
 use HTTP::Request           ();
 use Plack::Builder          qw( builder enable mount );
@@ -45,13 +46,40 @@ subtest 'validate caller ok' => sub {
   ) or note($EVAL_ERROR);
 };
 
-subtest 'validate missing header' => sub {
+subtest 'missing header' => sub {
   ok(
     lives {
       my $res = $test->request(HTTP::Request->new('GET', qw{/}));
-      is(400, $res->code, 'match missing header');
+      is(400, $res->code, 'missing header code');
+      is("missing $X_GROKLOC_ID header",
+        $res->content, 'missing header content');
     },
-    'validate missing header lives'
+    'missing header lives'
+  ) or note($EVAL_ERROR);
+};
+
+subtest 'malformed header' => sub {
+  ok(
+    lives {
+      my $res = $test->request(
+        HTTP::Request->new('GET', qw{/}, [ $X_GROKLOC_ID => 'not-uuid' ]));
+      is(400, $res->code, 'malformed header code');
+      is("malformed $X_GROKLOC_ID header",
+        $res->content, 'malformed header content');
+    },
+    'malformed header lives'
+  ) or note($EVAL_ERROR);
+};
+
+subtest 'user not found' => sub {
+  ok(
+    lives {
+      my $res = $test->request(
+        HTTP::Request->new('GET', qw{/}, [ $X_GROKLOC_ID => random_v4uuid ]));
+      is(404,              $res->code,    'user not found code');
+      is('user not found', $res->content, 'user not found content');
+    },
+    'user not found lives'
   ) or note($EVAL_ERROR);
 };
 
