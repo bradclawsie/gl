@@ -31,6 +31,13 @@ my $app = builder {
   enable 'ValidateCaller';
 
   mount qw{/} => sub { return [ 200, [], [qw{}] ] };
+
+  mount qw{/is_root} => sub ($env) {
+    if ($env->{caller_is_root}) {
+      return [ 200, [], [qw{}] ];
+    }
+    return [ 400, [], [qw{}] ];
+  }
 };
 
 my $test = Plack::Test->create($app);
@@ -41,8 +48,26 @@ subtest 'validate caller ok' => sub {
       my $res = $test->request(
         HTTP::Request->new('GET', qw{/}, [ $X_GROKLOC_ID => $user->id ]));
       is(200, $res->code, 'validate caller code');
+      $res = $test->request(
+        HTTP::Request->new('GET', qw{/is_root}, [ $X_GROKLOC_ID => $user->id ])
+      );
+      is(400, $res->code, 'validate is_root code');
     },
     'validate caller lives'
+  ) or note($EVAL_ERROR);
+};
+
+subtest 'validate root' => sub {
+  ok(
+    lives {
+      my $res = $test->request(
+        HTTP::Request->new(
+          'GET', qw{/is_root}, [ $X_GROKLOC_ID => $rt->root->owner->id ]
+        )
+      );
+      is(200, $res->code, 'validate root code');
+    },
+    'validate root lives'
   ) or note($EVAL_ERROR);
 };
 

@@ -34,9 +34,16 @@ sub call ($self, $env) {
     return $res->finalize;
   }
 
+  $env->{caller_is_root} = false;
+  if ($user_id eq $rt->root->owner->id) {
+    $env->{calling_org}    = $rt->root;
+    $env->{calling_user}   = $rt->root->owner;
+    $env->{caller_is_root} = true;
+    return $self->app->($env);
+  }
+
   my ($calling_org, $calling_user);
   try {
-    # special case: $user_id is $rt root user
     $calling_user = GL::User->read($rt->db, $rt->get_key, $user_id);
   }
   catch ($e) {
@@ -49,7 +56,6 @@ sub call ($self, $env) {
   }
 
   try {
-    # special case: $calling_user->org is $rt root org
     $calling_org = GL::Org->read($rt->db, $rt->get_key, $calling_user->org);
   }
   catch ($e) {
