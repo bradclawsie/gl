@@ -1,10 +1,11 @@
 # vim: set filetype=perl :
 use v5.42;
 use strictures 2;
-use Carp           qw( croak );
-use Crypt::Misc    qw( random_v4uuid );
-use Module::Load   qw( load );
-use Plack::Builder qw( builder enable mount );
+use Carp            qw( croak );
+use Crypt::Misc     qw( random_v4uuid );
+use Module::Load    qw( load );
+use Plack::Builder  qw( builder enable mount );
+use Plack::Response ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -24,14 +25,17 @@ load $rt_pkg;
 my $rt = $rt_pkg->new;
 
 my $default_app = sub {
-  return [ 404, [ 'Content-Type', 'text/plain' ], ['not found'] ];
+  my $res = Plack::Response->new(404);
+  $res->content_type('text/plain');
+  $res->body('not found');
+  return $res->finalize;
 };
 
 builder {
   # Add runtime to $env.
   enable sub ($app) {
     return sub ($env) {
-      $env->{'rt'} = $rt;
+      $env->{rt} = $rt;
       return $app->($env);
     };
   };

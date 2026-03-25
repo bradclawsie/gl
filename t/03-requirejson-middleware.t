@@ -16,40 +16,40 @@ subtest 'require json ok' => sub {
       my $app = builder {
         enable 'RequireJSON';
 
-        mount qw{/} => sub { return [ 200, [], [qw{}] ] };
+        mount q{/} => sub { return [ 200, [], [q{}] ] };
       };
 
       my $test = Plack::Test->create($app);
 
       my $res = $test->request(
-        HTTP::Request->new('POST', qw{/}, [ 'Content-Type' => 'text/plain' ]));
+        HTTP::Request->new('POST', q{/}, [ 'Content-Type' => 'text/plain' ]));
       is(415, $res->code, 'match content-type fail');
 
       $res = $test->request(
         HTTP::Request->new(
-          'POST', qw{/}, [ 'Content-Type' => 'application/json' ]
+          'POST', q{/}, [ 'Content-Type' => 'application/json' ]
         )
       );
       is(200, $res->code, 'match content-type');
 
       $res = $test->request(
-        HTTP::Request->new('PUT', qw{/}, [ 'Content-Type' => 'text/plain' ]));
+        HTTP::Request->new('PUT', q{/}, [ 'Content-Type' => 'text/plain' ]));
       is(415, $res->code, 'match content-type fail');
 
       $res = $test->request(
         HTTP::Request->new(
-          'PUT', qw{/}, [ 'Content-Type' => 'application/json' ]
+          'PUT', q{/}, [ 'Content-Type' => 'application/json' ]
         )
       );
       is(200, $res->code, 'match content-type');
 
       $res = $test->request(
-        HTTP::Request->new('GET', qw{/}, [ 'Content-Type' => 'text/plain' ]));
+        HTTP::Request->new('GET', q{/}, [ 'Content-Type' => 'text/plain' ]));
       is(200, $res->code, 'bypass middleware');
 
       $res = $test->request(
         HTTP::Request->new(
-          'GET', qw{/}, [ 'Content-Type' => 'application/json' ]
+          'GET', q{/}, [ 'Content-Type' => 'application/json' ]
         )
       );
       is(200, $res->code, 'bypass middleware');
