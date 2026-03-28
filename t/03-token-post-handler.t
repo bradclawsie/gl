@@ -40,9 +40,9 @@ my $app = builder {
 
   enable 'RequestId', id_generator => sub { random_v4uuid };
 
-  enable 'ValidateCaller';
-
   enable 'RequireJSON';
+
+  enable 'ValidateCaller';
 
   mount q{/} => $token_app;
 };
@@ -61,7 +61,7 @@ subtest 'token post ok' => sub {
         ],
         encode_json(
           {
-            proof => unpack('H*', $priv->sign_message($user->{id})),
+            proof => unpack('H*', $priv->sign_message($user->id)),
           }
         ),
       );
@@ -70,7 +70,7 @@ subtest 'token post ok' => sub {
       is(200, $res->code, 'post ok');
       my $content_json = decode_json($res->content);
       my $jwt = GL::Crypt::JWT->decode($content_json->{token}, $rt->token_key);
-      is($user->{id}, $jwt->sub, 'sub and id match');
+      is($user->id, $jwt->sub, 'sub and id match');
     },
     'token post ok lives'
   ) or note($EVAL_ERROR);

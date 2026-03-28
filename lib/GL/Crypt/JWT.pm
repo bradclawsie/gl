@@ -80,7 +80,7 @@ signature_for from_header => (
 );
 
 sub from_header ($class, $header, $token_key) {
-  if ($header =~ m/^$TOKEN_TYPE\s+(\S+)\s*$/x) {
+  if ($header =~ m/^\Q$TOKEN_TYPE\E\s+(\S+)\s*$/x) {
     return $class->decode($1, $token_key);
   }
   croak 'bad header';
