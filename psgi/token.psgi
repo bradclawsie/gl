@@ -5,7 +5,7 @@ use Carp               qw( croak );
 use Crypt::Misc        qw( random_v4uuid );
 use Crypt::PK::Ed25519 ();
 use JSON::MaybeXS      qw( encode_json );
-use Plack::Builder     qw( builder mount );
+use Plack::Builder     qw( builder );
 use Plack::Request     ();
 use Plack::Response    ();
 
@@ -15,7 +15,6 @@ our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 my $post_handler = sub ($env) {
-  my $rt  = $env->{rt} || croak 'no runtime in env';
   my $req = Plack::Request->new($env);
 
   if ($req->method ne 'POST') {
@@ -29,15 +28,21 @@ my $post_handler = sub ($env) {
     croak 'RequestId middleware must be enabled';
   }
 
+  unless (defined $env->{'psgix.calling_user'}) {
+    croak 'ValidateCaller middleware must be enabled';
+  }
+
   unless (defined $env->{'psgix.payload'}) {
     croak 'RequireJSON middleware must be enabled';
   }
 
-  my $calling_user = $env->{'psgix.calling_user'} || croak 'calling_user';
-
   my $log_prefix = join(q{ },
     q{[} . $env->{'psgix.request_id'} . q{]},
     q{[} . $req->path_info . q{]});
+
+  my $rt = $env->{rt} || croak 'no runtime in env';
+
+  my $calling_user = $env->{'psgix.calling_user'};
 
   $rt->log->info(
     join(q{ }, $log_prefix, encode_json({user => $calling_user->id})));
@@ -78,7 +83,7 @@ my $post_handler = sub ($env) {
 };
 
 builder {
-  mount q{/} => $post_handler;
+  $post_handler;
 };
 
 __END__

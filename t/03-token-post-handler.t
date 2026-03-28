@@ -7,7 +7,7 @@ use English                 qw(-no_match_vars);
 use HTTP::Request           ();
 use JSON::MaybeXS           qw( decode_json encode_json );
 use Path::Tiny              qw( path );
-use Plack::Builder          qw( builder enable mount );
+use Plack::Builder          qw( builder enable );
 use Plack::Test             ();
 use Plack::Util             ();
 use Test2::V0               qw( done_testing is note ok subtest );
@@ -24,9 +24,8 @@ our $AUTHORITY = 'cpan:bclawsie';
 my $rt = GL::Runtime::Test->new;
 my ($org, $user) = org_with_user($rt);
 
-my $psgi_path  = $ENV{PSGI_PATH} // croak 'PSGI_PATH';
-my $token_psgi = path($psgi_path, 'token.psgi');
-my $token_app  = Plack::Util::load_psgi($token_psgi);
+my $psgi_path = $ENV{PSGI_PATH} // croak 'PSGI_PATH';
+my $token_app = Plack::Util::load_psgi(path($psgi_path, 'token.psgi'));
 
 my $app = builder {
 
@@ -39,12 +38,10 @@ my $app = builder {
   };
 
   enable 'RequestId', id_generator => sub { random_v4uuid };
-
+  enable 'ValidateCaller';
   enable 'RequireJSON';
 
-  enable 'ValidateCaller';
-
-  mount q{/} => $token_app;
+  $token_app;
 };
 
 my $test = Plack::Test->create($app);

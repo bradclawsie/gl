@@ -4,8 +4,10 @@ use strictures 2;
 use Carp            qw( croak );
 use Crypt::Misc     qw( random_v4uuid );
 use Module::Load    qw( load );
+use Path::Tiny      qw( path );
 use Plack::Builder  qw( builder enable mount );
 use Plack::Response ();
+use Plack::Util     ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -24,6 +26,9 @@ else {
 load $rt_pkg;
 my $rt = $rt_pkg->new;
 
+my $psgi_path = $ENV{PSGI_PATH} // croak 'PSGI_PATH';
+my $token_app = Plack::Util::load_psgi(path($psgi_path, 'token.psgi'));
+
 my $default_app = sub {
   my $res = Plack::Response->new(404);
   $res->content_type('text/plain');
@@ -39,17 +44,17 @@ builder {
       return $app->($env);
     };
   };
+
   enable 'RequestId', id_generator => sub { random_v4uuid };
 
-  # api.psgi will have the Module::Load stuff as it requires a runtime
-  # mount '/api' => Plack::Util::load_psgi('./api.psgi');
-  #
-  # token creation
-  # mount '/token' => Plack::Util::load_psgi('./token.psgi');
-  #
-  # non-authenticated pages
-  # mount '/server' => Plack::Util::load_psgi('./server.psgi');
-  #
+  mount q{/token} => builder {
+    enable 'ValidateCaller';
+    enable 'RequireJSON';
+
+    $token_app;
+  };
+
+  # 404 handler
   mount q{/} => $default_app;
 };
 
