@@ -4,7 +4,7 @@ use strictures 2;
 use Carp               qw( croak );
 use Crypt::Misc        qw( random_v4uuid );
 use Crypt::PK::Ed25519 ();
-use JSON::MaybeXS      qw( decode_json encode_json );
+use JSON::MaybeXS      qw( encode_json );
 use Plack::Builder     qw( builder mount );
 use Plack::Request     ();
 use Plack::Response    ();
@@ -18,8 +18,19 @@ my $post_handler = sub ($env) {
   my $rt  = $env->{rt} || croak 'no runtime in env';
   my $req = Plack::Request->new($env);
 
+  if ($req->method ne 'POST') {
+    my $res = Plack::Response->new(405);
+    $res->content_type('text/plain');
+    $res->body(q{method must be POST});
+    return $res->finalize;
+  }
+
   unless (defined $env->{'psgix.request_id'}) {
     croak 'RequestId middleware must be enabled';
+  }
+
+  unless (defined $env->{'psgix.payload'}) {
+    croak 'RequireJSON middleware must be enabled';
   }
 
   my $calling_user = $env->{'psgix.calling_user'} || croak 'calling_user';
@@ -31,14 +42,8 @@ my $post_handler = sub ($env) {
   $rt->log->info(
     join(q{ }, $log_prefix, encode_json({user => $calling_user->id})));
 
-  if ($req->method ne 'POST') {
-    my $res = Plack::Response->new(405);
-    $res->content_type('text/plain');
-    $res->body(q{method must be POST});
-    return $res->finalize;
-  }
+  my $payload = $env->{'psgix.payload'};
 
-  my $payload = decode_json($req->content // '{}');
   unless (defined $payload->{proof}) {
     my $res = Plack::Response->new(400);
     $res->content_type('text/plain');

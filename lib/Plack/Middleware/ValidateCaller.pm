@@ -75,6 +75,14 @@ sub call ($self, $env) {
     }
   }
 
+  # check active status for user
+  if ($calling_user->status != $STATUS_ACTIVE) {
+    my $res = Plack::Response->new(400);
+    $res->content_type('text/plain');
+    $res->body('user not active');
+    return $res->finalize;
+  }
+
   try {
     $calling_org = GL::Org->read($rt->db, $rt->get_key, $calling_user->org);
   }
@@ -85,14 +93,6 @@ sub call ($self, $env) {
     my $res = Plack::Response->new(500);
     $res->content_type('text/plain');
     $res->body('internal error');
-    return $res->finalize;
-  }
-
-  # check active status for user
-  if ($calling_user->status != $STATUS_ACTIVE) {
-    my $res = Plack::Response->new(400);
-    $res->content_type('text/plain');
-    $res->body('user not active');
     return $res->finalize;
   }
 
