@@ -19,17 +19,8 @@ my $rt = GL::Runtime::Test->new;
 my ($org, $user) = org_with_user($rt);
 
 my $app = builder {
-
-  # Add runtime to $env.
-  enable sub ($app) {
-    return sub ($env) {
-      $env->{rt} = $rt;
-      return $app->($env);
-    };
-  };
-
-  enable 'RequestId', id_generator => sub { random_v4uuid };
-
+  enable 'WithRuntime', runtime      => $rt;
+  enable 'RequestId',   id_generator => sub { random_v4uuid };
   enable 'ValidateCaller';
 
   mount q{/} => sub ($env) {

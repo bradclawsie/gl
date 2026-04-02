@@ -5,11 +5,12 @@ use Carp               qw( croak );
 use Crypt::Misc        qw( random_v4uuid );
 use Crypt::PK::Ed25519 ();
 use JSON::MaybeXS      qw( encode_json );
-use Plack::Builder     qw( builder );
+use Plack::Builder     qw( builder enable );
 use Plack::Request     ();
 use Plack::Response    ();
 
 use GL::Crypt::JWT ();
+use GL::LogLine    ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -24,30 +25,16 @@ my $post_handler = sub ($env) {
     return $res->finalize;
   }
 
-  unless (defined $env->{'psgix.request_id'}) {
-    croak 'RequestId middleware must be enabled';
-  }
-
-  unless (defined $env->{'psgix.calling_user'}) {
-    croak 'ValidateCaller middleware must be enabled';
-  }
-
-  unless (defined $env->{'psgix.payload'}) {
-    croak 'RequireJSON middleware must be enabled';
-  }
-
-  my $log_prefix = join(q{ },
-    q{[} . $env->{'psgix.request_id'} . q{]},
-    q{[} . $req->path_info . q{]});
-
-  my $rt = $env->{rt} || croak 'no runtime in env';
-
-  my $calling_user = $env->{'psgix.calling_user'};
+  my $request_id   = $env->{'psgix.request_id'} || croak 'enable RequestId';
+  my $rt           = $env->{'psgix.runtime'}    || croak 'enable WithRuntime';
+  my $calling_user = $env->{'psgix.calling_user'}
+    || croak 'enable ValidateCaller';
+  my $log_prefix = GL::LogLine->prefix($env);
 
   $rt->log->info(
     join(q{ }, $log_prefix, encode_json({user => $calling_user->id})));
 
-  my $payload = $env->{'psgix.payload'};
+  my $payload = $env->{'psgix.payload'} || croak 'enable RequireJSON';
 
   unless (defined $payload->{proof}) {
     my $res = Plack::Response->new(400);
@@ -83,6 +70,9 @@ my $post_handler = sub ($env) {
 };
 
 builder {
+  enable 'ValidateCaller';
+  enable 'RequireJSON';
+
   $post_handler;
 };
 

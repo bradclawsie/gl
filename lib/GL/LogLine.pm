@@ -7,7 +7,7 @@ use Time::Piece            qw( localtime );
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
 use Types::Common::String  qw( NonEmptyStr );
-use Types::Standard        qw( ClassName CodeRef InstanceOf Str );
+use Types::Standard        qw( Any ClassName CodeRef HashRef InstanceOf Str );
 
 use GL::Type qw( LogLine );
 
@@ -36,6 +36,22 @@ has 'line' => (
   isa      => PositiveInt,
   required => true,
 );
+
+# Build a prefix
+signature_for prefix => (
+  method     => false,
+  positional => [ ClassName, HashRef [Any] ],
+  returns    => Str,
+);
+
+sub prefix ($class, $env) {
+  croak 'PATH_INFO'        unless (defined $env->{'PATH_INFO'});
+  croak 'psgix.request_id' unless (defined $env->{'psgix.request_id'});
+
+  return join(q{ },
+    q{[} . $env->{'psgix.request_id'} . q{]},
+    q{[} . $env->{'PATH_INFO'} . q{]});
+}
 
 signature_for logdispatch_callback => (
   method     => false,

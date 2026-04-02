@@ -37,22 +37,10 @@ my $default_app = sub {
 };
 
 builder {
-  # Add runtime to $env.
-  enable sub ($app) {
-    return sub ($env) {
-      $env->{rt} = $rt;
-      return $app->($env);
-    };
-  };
+  enable 'WithRuntime', runtime      => $rt;
+  enable 'RequestId',   id_generator => sub { random_v4uuid };
 
-  enable 'RequestId', id_generator => sub { random_v4uuid };
-
-  mount q{/token} => builder {
-    enable 'ValidateCaller';
-    enable 'RequireJSON';
-
-    $token_app;
-  };
+  mount q{/token} => $token_app;
 
   # 404 handler
   mount q{/} => $default_app;
