@@ -9,6 +9,7 @@ use Plack::Request  ();
 use Plack::Response ();
 
 use GL::Attribute qw( $STATUS_ACTIVE $X_GROKLOC_ID );
+use GL::LogLine   ();
 use GL::Org       ();
 use GL::User      ();
 
@@ -17,16 +18,7 @@ our $AUTHORITY = 'cpan:bclawsie';
 
 # Validate the caller and populate $env with caller User and Org.
 sub call ($self, $env) {
-  my $rt  = $env->{rt} || croak 'no runtime in env';
   my $req = Plack::Request->new($env);
-
-  unless (defined $env->{'psgix.request_id'}) {
-    croak 'RequestId middleware must be enabled';
-  }
-
-  my $log_prefix = join(q{ },
-    q{[} . $env->{'psgix.request_id'} . q{]},
-    q{[} . $req->path_info . q{]});
 
   unless (defined $req->header($X_GROKLOC_ID)) {
     my $res = Plack::Response->new(400);
@@ -42,6 +34,10 @@ sub call ($self, $env) {
     $res->body("malformed $X_GROKLOC_ID header");
     return $res->finalize;
   }
+
+  my $rt = $env->{'psgix.runtime'} || croak 'enable WithRuntime';
+
+  my $log_prefix = GL::LogLine->prefix($env);
 
   $rt->log->info(join(q{ }, $log_prefix, encode_json({user => $user_id})));
 
