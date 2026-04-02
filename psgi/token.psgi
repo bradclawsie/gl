@@ -7,9 +7,9 @@ use Crypt::PK::Ed25519 ();
 use JSON::MaybeXS      qw( encode_json );
 use Plack::Builder     qw( builder enable );
 use Plack::Request     ();
-use Plack::Response    ();
 
 use GL::Crypt::JWT ();
+use GL::HTTP       qw( http_err );
 use GL::LogLine    ();
 
 our $VERSION   = '0.0.1';
@@ -18,12 +18,7 @@ our $AUTHORITY = 'cpan:bclawsie';
 my $post_handler = sub ($env) {
   my $req = Plack::Request->new($env);
 
-  if ($req->method ne 'POST') {
-    my $res = Plack::Response->new(405);
-    $res->content_type('text/plain');
-    $res->body(q{method must be POST});
-    return $res->finalize;
-  }
+  return http_err(405, q{method must be POST}) if ($req->method ne 'POST');
 
   my $request_id   = $env->{'psgix.request_id'} || croak 'enable RequestId';
   my $rt           = $env->{'psgix.runtime'}    || croak 'enable WithRuntime';
@@ -36,21 +31,14 @@ my $post_handler = sub ($env) {
 
   my $payload = $env->{'psgix.payload'} || croak 'enable RequireJSON';
 
-  unless (defined $payload->{proof}) {
-    my $res = Plack::Response->new(400);
-    $res->content_type('text/plain');
-    $res->body(q{'proof' must be set in payload});
-    return $res->finalize;
-  }
+  return http_err(400, q{'proof' must be set in payload})
+    unless (defined $payload->{proof});
 
   my $pub = Crypt::PK::Ed25519->new(\$calling_user->ed25519_public);
   unless (
     $pub->verify_message(pack('H*', $payload->{proof}), $calling_user->id))
   {
-    my $res = Plack::Response->new(401);
-    $res->content_type('text/plain');
-    $res->body(q{authentication proof not verified});
-    return $res->finalize;
+    return http_err(401, q{authentication proof not verified});
   }
 
   my $now = time;

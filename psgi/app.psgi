@@ -1,13 +1,14 @@
 # vim: set filetype=perl :
 use v5.42;
 use strictures 2;
-use Carp            qw( croak );
-use Crypt::Misc     qw( random_v4uuid );
-use Module::Load    qw( load );
-use Path::Tiny      qw( path );
-use Plack::Builder  qw( builder enable mount );
-use Plack::Response ();
-use Plack::Util     ();
+use Carp           qw( croak );
+use Crypt::Misc    qw( random_v4uuid );
+use Module::Load   qw( load );
+use Path::Tiny     qw( path );
+use Plack::Builder qw( builder enable mount );
+use Plack::Util    ();
+
+use GL::HTTP qw( http_err );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -30,10 +31,7 @@ my $psgi_path = $ENV{PSGI_PATH} // croak 'PSGI_PATH';
 my $token_app = Plack::Util::load_psgi(path($psgi_path, 'token.psgi'));
 
 my $default_app = sub {
-  my $res = Plack::Response->new(404);
-  $res->content_type('text/plain');
-  $res->body('not found');
-  return $res->finalize;
+  return http_err(404, 'not found');
 };
 
 builder {
