@@ -43,6 +43,7 @@ has 'nbf' => (
   isa      => PositiveInt->where('$_ < time'),
   required => true,
 );
+
 signature_for decode => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],

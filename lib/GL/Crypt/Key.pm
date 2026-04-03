@@ -11,8 +11,7 @@ our $AUTHORITY = 'cpan:bclawsie';
 Readonly::Scalar our $HEX_LENGTH => 32;
 
 sub random_key {
-  my $rng = Bytes::Random::Secure::Tiny->new;
-  return $rng->bytes_hex(int($HEX_LENGTH / 2));
+  return Bytes::Random::Secure::Tiny->new->bytes_hex(int($HEX_LENGTH / 2));
 }
 
 our @EXPORT_OK   = qw( random_key );
