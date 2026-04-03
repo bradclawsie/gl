@@ -108,13 +108,6 @@ my $org = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($org);
 
-my $password = 'Type::Tiny'->new(
-  name       => 'Password',
-  constraint => sub { m/^\$argon2/x },
-  message    => sub { 'bad password' },
-);
-__PACKAGE__->meta->add_type($password);
-
 my $role = 'Type::Tiny'->new(
   name       => 'Role',
   constraint =>

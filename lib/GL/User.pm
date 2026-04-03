@@ -14,19 +14,10 @@ use Types::Standard qw( CodeRef ClassName HashRef Maybe Slurpy StrMatch Value );
 use Types::UUID     qw( Uuid );
 
 use GL::Attribute qw( $DATE $ROLE_TEST $STATUS_ACTIVE );
-use GL::Type      qw(
-  DB
-  DBH
-  Digest
-  Ed25519Private
-  Ed25519Public
-  Password
-  Status
-  User
-);
+use GL::Type      qw( DB DBH Digest Ed25519Private Ed25519Public Status User );
 use GL::Crypt::AESGCM   qw( decrypt encrypt );
 use GL::Crypt::IV       qw( random_iv );
-use GL::Crypt::Password qw( random_password );
+use GL::Crypt::Password qw( Password random_password );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';

@@ -3,13 +3,25 @@ use v5.42;
 use strictures 2;
 use Bytes::Random::Secure::Tiny ();
 use Crypt::Argon2               qw( argon2_verify argon2id_pass );
-use Exporter                    qw( import );
 use Readonly                    ();
+use Type::Params                qw( signature_for );
+use Type::Utils                 qw( as declare message where );
+use Types::Standard             qw( Bool Str );
+
+use Type::Library -base, -declare => qw( Password );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
 
 Readonly::Scalar our $SALT_LENGTH => 16;
+
+declare Password, as Str, where { m/^\$argon2/x }, message { 'bad password' };
+
+signature_for text_to_password => (
+  method     => false,
+  positional => [Str],
+  returns    => Password,
+);
 
 sub text_to_password ($text) {
   my $rng  = Bytes::Random::Secure::Tiny->new;
@@ -17,18 +29,32 @@ sub text_to_password ($text) {
   return argon2id_pass($text, $salt, 1, '32M', 1, 16);
 }
 
+signature_for verify_password => (
+  method     => false,
+  positional => [ Password, Str ],
+  returns    => Bool,
+);
+
 sub verify_password ($password, $text) {
   return argon2_verify($password, $text);
 }
+
+signature_for random_password => (
+  method     => false,
+  positional => [],
+  returns    => Password,
+);
 
 sub random_password {
   my $rng = Bytes::Random::Secure::Tiny->new;
   return text_to_password($rng->bytes_hex(8));
 }
 
-our @EXPORT_OK = qw( text_to_password verify_password random_password );
+our @EXPORT_OK =
+  (@EXPORT_OK, 'text_to_password', 'verify_password', 'random_password');
 our %EXPORT_TAGS =
-  (all => [qw( text_to_password verify_password random_password)]);
+  (all =>
+    [ (@EXPORT_OK, 'text_to_password', 'verify_password', 'random_password') ]);
 
 __END__
 
