@@ -51,10 +51,10 @@ sub random_password {
 }
 
 our @EXPORT_OK =
-  (@EXPORT_OK, 'text_to_password', 'verify_password', 'random_password');
+  (@EXPORT_OK, qw(text_to_password verify_password random_password));
 our %EXPORT_TAGS =
-  (all =>
-    [ (@EXPORT_OK, 'text_to_password', 'verify_password', 'random_password') ]);
+  (all => [ (@EXPORT_OK, qw(text_to_password verify_password random_password)) ]
+  );
 
 __END__
 
