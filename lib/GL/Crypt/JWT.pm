@@ -7,13 +7,11 @@ use Readonly               ();
 use Type::Params           qw( signature_for );
 use Types::Common::Numeric qw( PositiveInt );
 use Types::Common::String  qw( NonEmptyStr );
-use Types::Standard        qw( ClassName );
+use Types::Standard        qw( ClassName InstanceOf );
 use Types::UUID            qw( Uuid );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
-
-use GL::Type qw( JWT );
 
 Readonly::Scalar our $TOKEN_TYPE => 'Bearer';
 
@@ -47,7 +45,7 @@ has 'nbf' => (
 signature_for decode => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],
-  returns    => JWT,
+  returns    => InstanceOf [__PACKAGE__],
 );
 
 sub decode ($class, $token, $token_key) {
@@ -77,7 +75,7 @@ sub encode ($self, $token_key) {
 signature_for from_header => (
   method     => false,
   positional => [ ClassName, NonEmptyStr, Uuid ],
-  returns    => JWT,
+  returns    => InstanceOf [__PACKAGE__],
 );
 
 sub from_header ($class, $header, $token_key) {

@@ -72,13 +72,6 @@ my $iv = 'Type::Tiny'->new(
 );
 __PACKAGE__->meta->add_type($iv);
 
-my $jwt = 'Type::Tiny'->new(
-  name       => 'JWT',
-  constraint => sub { $_ isa GL::Crypt::JWT },
-  message    => sub { 'bad jwt' },
-);
-__PACKAGE__->meta->add_type($jwt);
-
 my $key = 'Type::Tiny'->new(
   name       => 'Key',
   constraint => sub { m/^[\da-f]{$GL::Crypt::Key::HEX_LENGTH}$/x },
