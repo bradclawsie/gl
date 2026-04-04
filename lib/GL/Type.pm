@@ -12,8 +12,7 @@ use GL::Attribute qw(
   $STATUS_INACTIVE
   $STATUS_UNCONFIRMED
 );
-use GL::Crypt::IV  ();
-use GL::Crypt::Key ();
+use GL::Crypt::IV ();
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';
@@ -71,13 +70,6 @@ my $iv = 'Type::Tiny'->new(
   message    => sub { 'bad iv' },
 );
 __PACKAGE__->meta->add_type($iv);
-
-my $key = 'Type::Tiny'->new(
-  name       => 'Key',
-  constraint => sub { m/^[\da-f]{$GL::Crypt::Key::HEX_LENGTH}$/x },
-  message    => sub { 'bad key' },
-);
-__PACKAGE__->meta->add_type($key);
 
 my $logline = 'Type::Tiny'->new(
   name       => 'LogLine',

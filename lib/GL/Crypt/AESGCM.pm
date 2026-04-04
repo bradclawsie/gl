@@ -7,7 +7,8 @@ use Crypt::AuthEnc::GCM   ();
 use Type::Params          qw( signature_for );
 use Types::Common::String qw( NonEmptyStr );
 
-use GL::Type qw( IV Key );
+use GL::Crypt::Key qw( Key );
+use GL::Type       qw( IV );
 
 our $VERSION   = '0.0.1';
 our $AUTHORITY = 'cpan:bclawsie';

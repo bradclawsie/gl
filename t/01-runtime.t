@@ -9,7 +9,7 @@ use Time::Piece             qw( localtime );
 
 use GL::Runtime::Test        ();
 use GL::Runtime::Development ();
-use GL::Type                 qw( Key );
+use GL::Crypt::Key           qw( Key );
 
 subtest 'test db' => sub {
   my $rt = GL::Runtime::Test->new;
